@@ -29,6 +29,11 @@ public class Enrollment {
     @Column(name = "status")
     private String status;
 
+    @ManyToOne
+    @JoinColumn(name = "academic_record_id")
+    private AcademicRecord academicRecord;
+
+
     public Enrollment() {
 
     }
