@@ -1,35 +1,43 @@
-package co.edu.udes.backend.models;
+package co.edu.udes.backend.models.enums;
 
-import co.edu.udes.backend.models.enums.StudentStatus;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.util.HashSet;
 
+@Entity
+@Table(name= "students")
 @Getter
 @Setter
-@Entity
-@Table(name = "Student")
-public class Student extends User {
-    @Column (name = "code")
+public class Student {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private LocalDate dateOfBirth;
+
+    @Column (nullable = false)
     private String code;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "enrollmentStatus")
-    private StudentStatus enrollmentStatus;
+//    @OneToMany(mappedBy = "students", cascade = CascadeType.ALL)
+//    private Set<Enrollment> enrollments = new HashSet<>();
 
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL) //One student can get many enrollments.
-    private List<Enrollment> enrollments;
+    //    @OneToMany(mappedBy = "students", cascade = CascadeType.ALL)
+//    private Set<Enrollment> enrollments = new HashSet<>();
 
-    public void manageEnrollment() {
-        System.out.println("Managing enrollment");
-    }
 
-    public Student(String code, StudentStatus enrollmentStatus, List<Enrollment> enrollments) {
-        super();
-        this.code = code;
-        this.enrollmentStatus = enrollmentStatus;
-        this.enrollments = enrollments;
-    }
+
 }

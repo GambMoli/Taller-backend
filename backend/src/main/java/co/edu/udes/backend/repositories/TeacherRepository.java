@@ -1,4 +1,4 @@
 package co.edu.udes.backend.repositories;
 
-public interface AcademicRecord {
+public interface TeacherRepository {
 }
