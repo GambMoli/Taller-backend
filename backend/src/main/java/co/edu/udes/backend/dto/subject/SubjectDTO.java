@@ -1,4 +1,4 @@
-package co.edu.udes.backend.dto;
+package co.edu.udes.backend.dto.subject;
 
 import lombok.Getter;
 import lombok.Setter;
