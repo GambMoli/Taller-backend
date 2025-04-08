@@ -1,59 +1,78 @@
 package co.edu.udes.backend.controllers;
 
-import co.edu.udes.backend.models.AcademicRecord;
-import co.edu.udes.backend.models.Student;
+import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
+import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
+import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.schedule.ScheduleDTO;
+import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
+import co.edu.udes.backend.dto.student.*;
 import co.edu.udes.backend.service.StudentService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
+@CrossOrigin(origins = "*")
 public class StudentController {
-
     private final StudentService studentService;
 
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
     }
 
-//    @PostMapping
-//    public Student create(@RequestBody Student student, @RequestParam Long careerId) {
-//        return studentService.create(student, careerId);
-//    }
-//
-//    @PutMapping("/{id}")
-//    public Student update(@PathVariable Long id, @RequestBody Student student, @RequestParam Long careerId) {
-//        return studentService.update(id, student, careerId);
-//    }
-
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        studentService.delete(id);
+    @PostMapping
+    public ResponseEntity<StudentResponseDTO> create(@RequestBody StudentDTO studentDTO) {
+        return new ResponseEntity<>(studentService.create(studentDTO), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public List<Student> findAll() {
-        return studentService.findAll();
+    public ResponseEntity<List<StudentResponseDTO>> findAll() {
+        return ResponseEntity.ok(studentService.findAll());
     }
 
     @GetMapping("/{id}")
-    public Student findById(@PathVariable Long id) {
-        return studentService.findById(id);
+    public ResponseEntity<StudentResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.findById(id));
     }
 
-//    @PostMapping("/{studentId}/enroll")
-//    public List<AcademicRecord> enroll(@PathVariable Long studentId, @RequestBody List<Long> groupIds) {
-//        return studentService.enrollSubjects(studentId, groupIds);
-//    }
-
-    @GetMapping("/{studentId}/current-subjects")
-    public List<AcademicRecord> getCurrentSubjects(@PathVariable Long studentId) {
-        return studentService.getCurrentSubjects(studentId);
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentResponseDTO> update(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
+        return ResponseEntity.ok(studentService.update(id, studentDTO));
     }
 
-    @GetMapping("/{studentId}/records")
-    public List<AcademicRecord> getAllRecords(@PathVariable Long studentId) {
-        return studentService.getAllRecords(studentId);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        studentService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/enroll-career")
+    public ResponseEntity<StudentResponseDTO> enrollInCareer(@RequestBody CareerEnrollmentDTO enrollmentDTO) {
+        return ResponseEntity.ok(studentService.enrollInCareer(enrollmentDTO));
+    }
+
+    @PostMapping("/enroll-group")
+    public ResponseEntity<StudentResponseDTO> enrollInGroup(@RequestBody EnrollmentDTO enrollmentDTO) {
+        return ResponseEntity.ok(studentService.enrollInGroup(enrollmentDTO));
+    }
+
+    @GetMapping("/{id}/academic-record")
+    public ResponseEntity<AcademicRecordDTO> getAcademicRecord(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getAcademicRecord(id));
+    }
+
+    @GetMapping("/{id}/schedule")
+    public ResponseEntity<ScheduleStudentDTO> getSchedule(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getSchedule(id));
+    }
+
+    @PostMapping("/cancel-enrollment")
+    public ResponseEntity<StudentResponseDTO> cancelGroupEnrollment(@RequestBody EnrollmentDTO enrollmentDTO) {
+        return ResponseEntity.ok(studentService.cancelGroupEnrollment(
+                enrollmentDTO.getStudentId(),
+                enrollmentDTO.getGroupId()));
     }
 }

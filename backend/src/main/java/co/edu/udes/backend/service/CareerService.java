@@ -63,7 +63,7 @@ public class CareerService {
 
     public List<CareerSimpleDTO> findAllSimple() {
         return careerRepository.findAll().stream()
-                .map(CareerSimpleDTO::fromEntity)  // Usamos CareerSimpleDTO para mostrar solo el nombre y ID
+                .map(CareerSimpleDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
@@ -74,7 +74,7 @@ public class CareerService {
 
     public CareerDTO findDTOById(Long id) {
         Career career = findById(id);
-        return convertToDTO(career);  // Devuelve el DTO completo
+        return convertToDTO(career);
     }
 
     public Career update(Long id, Career career) {

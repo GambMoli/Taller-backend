@@ -1,29 +1,43 @@
 package co.edu.udes.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 public class Student {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String code;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String password;
-    private String documentNumber;
 
-    @ManyToOne
-    private Career career;  // Relación con Career
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "career_id")
+    @JsonIgnore
+    private Career career;
 
-    @OneToMany(mappedBy = "student")
-    private List<AcademicRecord> academicRecords;
-
-    @OneToMany(mappedBy = "student")
-    private List<Attendance> attendances;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "student_groups",
+            joinColumns = @JoinColumn(name = "student_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    private Set<GroupClass> enrolledGroups = new HashSet<>();
 }

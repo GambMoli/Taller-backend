@@ -54,7 +54,7 @@ public class SemesterService {
         Semester existingSemester = semesterRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.SEMESTER_NOT_FOUND));
 
-        // Verificar si el nuevo número ya existe para esta carrera
+
         if (existingSemester.getNumber() != semesterDetails.getNumber() &&
                 semesterRepository.existsByNumberAndCareerId(
                         semesterDetails.getNumber(), existingSemester.getCareer().getId())) {

@@ -156,14 +156,35 @@ public class SubjectService {
         return SubjectResponseDTO.fromEntity(updatedSubject);
     }
 
-    // Otros métodos existentes...
+
 
     public void assignToSemester(Long subjectId, Long semesterId) {
         Subject subject = subjectRepository.findById(subjectId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SUBJECT_NOT_FOUND));
 
-        Semester semester = semesterRepository.findById(semesterId)
+        Semester newSemester = semesterRepository.findById(semesterId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SEMESTER_NOT_FOUND));
+
+        // Verificar si ya está asignada a un semestre de la misma carrera
+        Semester currentSemester = subject.getSemester();
+
+        if (currentSemester != null) {
+            // Si el semestre actual pertenece a la misma carrera que el nuevo semestre, no permite esto:
+            if (currentSemester.getCareer().getId().equals(newSemester.getCareer().getId())) {
+                // La materia ya está asignada a un semestre de esta carrera, se puede actualizar
+                // O lanzar excepción si no quieres permitir //Gabo
+                throw new CustomException(ErrorCode.SUBJECT_ALREADY_ASSIGNED,
+                        "La materia ya está asignada al semestre " + currentSemester.getNumber() +
+                                " de la misma carrera. Use el endpoint de actualización para cambiar el semestre.");
+            }
+
+            Subject newSubject = new Subject();
+            newSubject.setName(subject.getName());
+            newSubject.setSemester(newSemester);
+
+            subjectRepository.save(newSubject);
+            return;
+        }
 
         // Validar que las materias prerrequisito estén asignadas a semestres anteriores
         if (subject.getPrerequisites() != null && !subject.getPrerequisites().isEmpty()) {
@@ -178,20 +199,18 @@ public class SubjectService {
                             "La materia prerrequisito '" + fullPrereq.getName() + "' no ha sido asignada a ningún semestre.");
                 }
 
-                if (!prereqSemester.getCareer().getId().equals(semester.getCareer().getId())) {
+                if (!prereqSemester.getCareer().getId().equals(newSemester.getCareer().getId())) {
                     throw new CustomException(ErrorCode.INVALID_PREREQUISITE_SEMESTER,
                             "La materia prerrequisito '" + fullPrereq.getName() + "' pertenece a otra carrera.");
                 }
 
-                if (prereqSemester.getNumber() >= semester.getNumber()) {
+                if (prereqSemester.getNumber() >= newSemester.getNumber()) {
                     throw new CustomException(ErrorCode.INVALID_PREREQUISITE_SEMESTER,
                             "La materia prerrequisito '" + fullPrereq.getName() + "' debe estar en un semestre anterior.");
                 }
             }
         }
-
-        // Si pasa todas las validaciones, se asigna
-        subject.setSemester(semester);
+        subject.setSemester(newSemester);
         subjectRepository.save(subject);
     }
 

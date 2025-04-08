@@ -1,120 +1,298 @@
 package co.edu.udes.backend.service;
 
-import co.edu.udes.backend.enums.AcademicStatus;
+import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
+import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
+import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
+import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
+import co.edu.udes.backend.dto.student.*;
+import co.edu.udes.backend.dto.subject.SubjectStatusDTO;
 import co.edu.udes.backend.enums.ErrorCode;
+import co.edu.udes.backend.exceptions.CustomException;
 import co.edu.udes.backend.models.*;
-import co.edu.udes.backend.repositories.*;
+import co.edu.udes.backend.repositories.CareerRepository;
+import co.edu.udes.backend.repositories.GroupClassRepository;
+import co.edu.udes.backend.repositories.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
     private final StudentRepository studentRepository;
-    private final GroupClassRepository groupRepository;
-    private final AcademicRecordRepository academicRecordRepository;
+    private final CareerRepository careerRepository;
+    private final GroupClassRepository groupClassRepository;
 
-    public StudentService(StudentRepository studentRepository,
-                          GroupClassRepository groupRepository,
-                          AcademicRecordRepository academicRecordRepository) {
+    public StudentService(StudentRepository studentRepository, CareerRepository careerRepository, GroupClassRepository groupClassRepository) {
         this.studentRepository = studentRepository;
-        this.groupRepository = groupRepository;
-        this.academicRecordRepository = academicRecordRepository;
+        this.careerRepository = careerRepository;
+        this.groupClassRepository = groupClassRepository;
     }
 
-    public Student create(Student student) {
-        return studentRepository.save(student);
+    public StudentResponseDTO create(StudentDTO studentDTO) {
+        if (studentRepository.existsByCode(studentDTO.getCode())) {
+            throw new CustomException(ErrorCode.STUDENT_ALREADY_EXISTS);
+        }
+
+        if (studentRepository.existsByEmail(studentDTO.getEmail())) {
+            throw new CustomException(ErrorCode.STUDENT_ALREADY_EXISTS);
+        }
+
+        Student student = new Student();
+        student.setCode(studentDTO.getCode());
+        student.setName(studentDTO.getName());
+        student.setEmail(studentDTO.getEmail());
+        student.setPassword(studentDTO.getPassword());
+
+        Student savedStudent = studentRepository.save(student);
+        return StudentResponseDTO.fromEntity(savedStudent);
     }
 
-    public Student update(Long id, Student updated) {
-        Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
-
-        student.setName(updated.getName());
-        student.setEmail(updated.getEmail());
-        student.setDocumentNumber(updated.getDocumentNumber());
-
-        return studentRepository.save(student);
-    }
-
-    public void delete(Long id) {
-        studentRepository.deleteById(id);
-    }
-
-    public List<Student> findAll() {
-        return studentRepository.findAll();
-    }
-
-    public Student findById(Long id) {
-        return studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
-    }
-
-    public List<AcademicRecord> getCurrentSubjects(Long studentId) {
-        Student student = findById(studentId);
-        return academicRecordRepository.findByStudent(student).stream()
-                .filter(r -> r.getStatus() == AcademicStatus.EN_CURSO)
+    public List<StudentResponseDTO> findAll() {
+        return studentRepository.findAll().stream()
+                .map(StudentResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    public List<AcademicRecord> getAllRecords(Long studentId) {
-        Student student = findById(studentId);
-        return academicRecordRepository.findByStudent(student);
+    public StudentResponseDTO findById(Long id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+        return StudentResponseDTO.fromEntity(student);
     }
 
-//    public List<AcademicRecord> enrollSubjects(Long studentId, List<Long> groupIds) {
-//        Student student = studentRepository.findById(studentId)
-//                .orElseThrow(() -> new RuntimeException(ErrorCode.STUDENT_NOT_FOUND.getMessage()));
-//
-//        // Verificar si la carrera del estudiante permite las materias
-//        Career career = student.getCareer();
-//        if (career == null) {
-//            throw new RuntimeException(ErrorCode.CAREER_NOT_FOUND.getMessage());
-//        }
-//
-//        List<AcademicRecord> enrolledRecords = new ArrayList<>();
-//
-//        for (Long groupId : groupIds) {
-//            GroupClass group = groupRepository.findById(groupId)
-//                    .orElseThrow(() -> new RuntimeException(ErrorCode.GROUP_NOT_FOUND.getMessage()));
-//
-//            Subject subject = group.getSubject();
-//
-//
-//            if (!career.getSubjects().contains(subject)) {
-//                throw new RuntimeException(ErrorCode.SUBJECT_NOT_FOUND.getMessage());
-//            }
-//
-//            // Verificar si ya está inscrito
-//            if (academicRecordRepository.existsByStudentAndSubject(student, subject)) {
-//                throw new RuntimeException(ErrorCode.ALREADY_ENROLLED.getMessage());
-//            }
-//
-//            // Verificar prerrequisito
-//            Subject prereq = subject.getPrerequisite();
-//            if (prereq != null) {
-//                AcademicRecord prereqRecord = academicRecordRepository
-//                        .findByStudentAndSubject(student, prereq)
-//                        .orElseThrow(() -> new RuntimeException(ErrorCode.PREREQUISITE_NOT_FOUND.getMessage()));
-//
-//                if (prereqRecord.getStatus() != AcademicStatus.APROBADO) {
-//                    throw new RuntimeException(ErrorCode.PREREQUISITE_NOT_APPROVED.getMessage());
-//                }
-//            }
-//
-//            // Crear nuevo registro académico
-//            AcademicRecord record = new AcademicRecord();
-//            record.setStudent(student);
-//            record.setGroup(group);
-//            record.setSubject(subject);
-//            record.setStatus(AcademicStatus.EN_CURSO);
-//
-//            enrolledRecords.add(academicRecordRepository.save(record));
-//        }
-//
-//        return enrolledRecords;
-//    }
+    public StudentResponseDTO update(Long id, StudentDTO studentDTO) {
+        Student existing = studentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
+        if (!existing.getCode().equals(studentDTO.getCode()) &&
+                studentRepository.existsByCode(studentDTO.getCode())) {
+            throw new CustomException(ErrorCode.STUDENT_ALREADY_EXISTS);
+        }
+
+        if (!existing.getEmail().equals(studentDTO.getEmail()) &&
+                studentRepository.existsByEmail(studentDTO.getEmail())) {
+            throw new CustomException(ErrorCode.STUDENT_ALREADY_EXISTS);
+        }
+
+        existing.setCode(studentDTO.getCode());
+        existing.setName(studentDTO.getName());
+        existing.setEmail(studentDTO.getEmail());
+        existing.setPassword(studentDTO.getPassword());
+
+        Student updatedStudent = studentRepository.save(existing);
+        return StudentResponseDTO.fromEntity(updatedStudent);
+    }
+
+    public void delete(Long id) {
+        if (!studentRepository.existsById(id)) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_FOUND);
+        }
+        studentRepository.deleteById(id);
+    }
+
+    @Transactional
+    public StudentResponseDTO enrollInCareer(CareerEnrollmentDTO enrollmentDTO) {
+        Student student = studentRepository.findById(enrollmentDTO.getStudentId())
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        Career career = careerRepository.findById(enrollmentDTO.getCareerId())
+                .orElseThrow(() -> new CustomException(ErrorCode.CAREER_NOT_FOUND));
+
+        student.setCareer(career);
+        Student updatedStudent = studentRepository.save(student);
+        return StudentResponseDTO.fromEntity(updatedStudent);
+    }
+
+    @Transactional
+    public StudentResponseDTO enrollInGroup(EnrollmentDTO enrollmentDTO) {
+        Student student = studentRepository.findById(enrollmentDTO.getStudentId())
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        GroupClass group = groupClassRepository.findById(enrollmentDTO.getGroupId())
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+        if (student.getCareer() == null) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED_IN_CAREER);
+        }
+
+        Subject subject = group.getSubject();
+
+
+        boolean subjectInCareer = student.getCareer().getSemesters().stream()
+                .flatMap(semester -> semester.getSubjects().stream())
+                .anyMatch(s -> s.getId().equals(subject.getId()));
+
+        if (!subjectInCareer) {
+            throw new CustomException(ErrorCode.SUBJECT_NOT_IN_CAREER);
+        }
+
+        if (subject.getPrerequisites() != null && !subject.getPrerequisites().isEmpty()) {
+            Set<Subject> passedSubjects = student.getEnrolledGroups().stream()
+                    .map(GroupClass::getSubject)
+                    .collect(Collectors.toSet());
+
+
+            for (Subject prerequisite : subject.getPrerequisites()) {
+                if (!passedSubjects.contains(prerequisite)) {
+                    throw new CustomException(ErrorCode.PREREQUISITE_NOT_COMPLETED);
+                }
+            }
+        }
+
+
+        if (group.getEnrolledCount() >= group.getCapacity()) {
+            throw new CustomException(ErrorCode.GROUP_FULL);
+        }
+
+
+        if (student.getEnrolledGroups().contains(group)) {
+            throw new CustomException(ErrorCode.STUDENT_ALREADY_ENROLLED);
+        }
+
+
+        student.getEnrolledGroups().add(group);
+        group.getStudents().add(student);
+
+        group.setEnrolledCount(group.getEnrolledCount() + 1);
+
+        groupClassRepository.save(group);
+        Student updatedStudent = studentRepository.save(student);
+
+        return StudentResponseDTO.fromEntity(updatedStudent);
+    }
+
+    @Transactional(readOnly = true)
+    public AcademicRecordDTO getAcademicRecord(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        if (student.getCareer() == null) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED_IN_CAREER);
+        }
+
+        AcademicRecordDTO academicRecord = new AcademicRecordDTO();
+        academicRecord.setStudentId(student.getId());
+        academicRecord.setStudentName(student.getName());
+        academicRecord.setCareerName(student.getCareer().getName());
+
+        List<Subject> allCareerSubjects = student.getCareer().getSemesters().stream()
+                .flatMap(semester -> semester.getSubjects().stream())
+                .collect(Collectors.toList());
+
+        Set<Subject> enrolledSubjects = student.getEnrolledGroups().stream()
+                .map(GroupClass::getSubject)
+                .collect(Collectors.toSet());
+
+        List<SubjectStatusDTO> inProgressSubjects = enrolledSubjects.stream()
+                .map(subject -> {
+                    Optional<Semester> semesterOpt = student.getCareer().getSemesters().stream()
+                            .filter(s -> s.getSubjects().contains(subject))
+                            .findFirst();
+
+                    int semester = semesterOpt.isPresent() ? semesterOpt.get().getNumber() : 0;
+
+                    return new SubjectStatusDTO(
+                            subject.getId(),
+                            subject.getName(),
+                            semester,
+                            "IN_PROGRESS"
+                    );
+                })
+                .collect(Collectors.toList());
+
+        academicRecord.setInProgressSubjects(inProgressSubjects);
+        academicRecord.setCompletedSubjects(new ArrayList<>());
+
+        List<SubjectStatusDTO> pendingSubjects = allCareerSubjects.stream()
+                .filter(subject -> !enrolledSubjects.contains(subject))
+                .map(subject -> {
+                    Optional<Semester> semesterOpt = student.getCareer().getSemesters().stream()
+                            .filter(s -> s.getSubjects().contains(subject))
+                            .findFirst();
+
+                    int semester = semesterOpt.isPresent() ? semesterOpt.get().getNumber() : 0;
+
+                    return new SubjectStatusDTO(
+                            subject.getId(),
+                            subject.getName(),
+
+                            semester,
+                            "PENDING"
+                    );
+                })
+                .collect(Collectors.toList());
+
+        academicRecord.setPendingSubjects(pendingSubjects);
+
+
+        int currentSemester = inProgressSubjects.stream()
+                .mapToInt(SubjectStatusDTO::getSemester)
+                .max()
+                .orElse(1);
+
+        academicRecord.setCurrentSemester(currentSemester);
+
+        return academicRecord;
+    }
+
+    @Transactional(readOnly = true)
+    public ScheduleStudentDTO getSchedule(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        if (student.getEnrolledGroups() == null || student.getEnrolledGroups().isEmpty()) {
+            throw new CustomException(ErrorCode.NO_ENROLLED_GROUPS);
+        }
+
+        ScheduleStudentDTO scheduleDTO = new ScheduleStudentDTO();
+        scheduleDTO.setStudentId(student.getId());
+        scheduleDTO.setStudentName(student.getName());
+
+        List<ClassScheduleDTO> schedules = new ArrayList<>();
+
+        for (GroupClass group : student.getEnrolledGroups()) {
+            for (Schedule schedule : group.getSchedules()) {
+                ClassScheduleDTO classSchedule = new ClassScheduleDTO(
+                        group.getId(),
+                        group.getSubject().getName(),
+                        schedule.getDay(),
+                        schedule.getStartTime(),
+                        schedule.getEndTime(),
+                        schedule.getClassroom()
+                );
+                schedules.add(classSchedule);
+            }
+        }
+
+        scheduleDTO.setSchedules(schedules);
+        return scheduleDTO;
+    }
+
+    @Transactional
+    public StudentResponseDTO cancelGroupEnrollment(Long studentId, Long groupId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        GroupClass group = groupClassRepository.findById(groupId)
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+
+        if (!student.getEnrolledGroups().contains(group)) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED);
+        }
+
+
+        student.getEnrolledGroups().remove(group);
+
+        group.getStudents().remove(student);
+
+        group.setEnrolledCount(group.getEnrolledCount() - 1);
+
+        groupClassRepository.save(group);
+        Student updatedStudent = studentRepository.save(student);
+
+        return StudentResponseDTO.fromEntity(updatedStudent);
+    }
 }

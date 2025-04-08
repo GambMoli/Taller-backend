@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@ControllerAdvice
+@ControllerAdvice //Luis, recuerda que esto es para las excepciones de forma global
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CustomException.class)
+    @ExceptionHandler(CustomException.class) // Y esta notacion le dice basicamente a spring, maneja el error de esta manera, y esto lo devuelve para aca por que la clase que hice de CustomException extiende de Runtime
     public ResponseEntity<Map<String, Object>> handleCustomException(CustomException ex) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());

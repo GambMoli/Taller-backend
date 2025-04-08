@@ -24,16 +24,15 @@ public class GroupClassService {
     }
 
     public GroupClassResponseDTO create(GroupClassDTO groupClassDTO) {
-        // Verificar que el subjectId no sea nulo
+
         if (groupClassDTO.getSubjectId() == null) {
             throw new CustomException(ErrorCode.SUBJECT_NOT_FOUND);
         }
 
-        // Verificar que exista la materia
+
         Subject subject = subjectRepository.findById(groupClassDTO.getSubjectId())
                 .orElseThrow(() -> new CustomException(ErrorCode.SUBJECT_NOT_FOUND));
 
-        // Verificar si ya existe un grupo con el mismo nombre para esta materia
         if (groupClassRepository.existsByNameAndSubjectId(groupClassDTO.getName(), groupClassDTO.getSubjectId())) {
             throw new CustomException(ErrorCode.GROUP_ALREADY_EXISTS);
         }
@@ -42,6 +41,7 @@ public class GroupClassService {
         groupClass.setName(groupClassDTO.getName());
         groupClass.setCapacity(groupClassDTO.getCapacity());
         groupClass.setSubject(subject);
+        groupClass.setEnrolledCount(0);
 
         GroupClass savedGroupClass = groupClassRepository.save(groupClass);
         return GroupClassResponseDTO.fromEntity(savedGroupClass);
@@ -63,16 +63,16 @@ public class GroupClassService {
         GroupClass existing = groupClassRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
-        // Verificar que el subjectId no sea nulo
+
         if (groupClassDTO.getSubjectId() == null) {
             throw new CustomException(ErrorCode.SUBJECT_NOT_FOUND);
         }
 
-        // Verificar que exista la materia
+
         Subject subject = subjectRepository.findById(groupClassDTO.getSubjectId())
                 .orElseThrow(() -> new CustomException(ErrorCode.SUBJECT_NOT_FOUND));
 
-        // Verificar si ya existe otro grupo con el mismo nombre para esta materia (excepto este mismo grupo)
+
         if (!existing.getName().equals(groupClassDTO.getName()) &&
                 groupClassRepository.existsByNameAndSubjectId(groupClassDTO.getName(), groupClassDTO.getSubjectId())) {
             throw new CustomException(ErrorCode.GROUP_ALREADY_EXISTS);
@@ -92,4 +92,5 @@ public class GroupClassService {
         }
         groupClassRepository.deleteById(id);
     }
+
 }
