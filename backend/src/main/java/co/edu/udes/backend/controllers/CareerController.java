@@ -28,12 +28,12 @@ public class CareerController {
 
 
     @GetMapping("/{id}")
-    public Career findById(@PathVariable Long id) {
+    public CareerDTO findById(@PathVariable Long id) {
         return careerService.findById(id);
     }
 
     @PutMapping("/{id}")
-    public Career update(@PathVariable Long id, @RequestBody Career career) {
+    public CareerDTO update(@PathVariable Long id, @RequestBody Career career) {
         return careerService.update(id, career);
     }
 

@@ -31,9 +31,9 @@ public class SubjectResponseDTO {
             dto.setSemester(SemesterSimpleDTO.fromEntity(subject.getSemester()));
         }
 
-        dto.setCareers(subject.getCareers().stream()
-                .map(CareerSimpleDTO::fromEntity)
-                .collect(Collectors.toList()));
+//        dto.setCareers(subject.getCareers().stream()
+//                .map(CareerSimpleDTO::fromEntity)
+//                .collect(Collectors.toList()));
 
         if (subject.getPrerequisites() != null && !subject.getPrerequisites().isEmpty()) {
             List<SubjectSimpleDTO> prerequisitesDTOs = subject.getPrerequisites().stream()

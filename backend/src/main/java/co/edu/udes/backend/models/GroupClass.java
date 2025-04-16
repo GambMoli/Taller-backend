@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -52,4 +53,8 @@ public class GroupClass {
         }
         return total;
     }
+
+    @OneToMany
+    @JoinColumn(name = "evaluation_id")
+    private List<Evaluation> evaluationList;
 }

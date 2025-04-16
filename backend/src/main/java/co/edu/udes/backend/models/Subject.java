@@ -38,4 +38,9 @@ public class Subject {
             inverseJoinColumns = @JoinColumn(name = "prerequisite_id")
     )
     private List<Subject> prerequisites;
+
+    @OneToMany
+    @JoinColumn(name = "evaluation_id")
+    private List<Evaluation> evaluation;
+
 }

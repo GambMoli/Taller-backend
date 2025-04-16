@@ -24,9 +24,7 @@ public class SemesterResponseDTO {
         dto.setId(semester.getId());
         dto.setNumber(semester.getNumber());
 
-        if (semester.getCareer() != null) {
-            dto.setCareer(CareerSimpleDTO.fromEntity(semester.getCareer()));
-        }
+
 
         if (semester.getSubjects() != null && !semester.getSubjects().isEmpty()) {
             dto.setSubjects(semester.getSubjects().stream()

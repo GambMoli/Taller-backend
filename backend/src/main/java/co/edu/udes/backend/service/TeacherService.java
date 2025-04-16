@@ -4,6 +4,7 @@ import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
 import co.edu.udes.backend.dto.teacher.*;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.teacher.TeacherMapper;
 import co.edu.udes.backend.models.GroupClass;
 import co.edu.udes.backend.models.Schedule;
 import co.edu.udes.backend.models.Teacher;
@@ -20,10 +21,12 @@ import java.util.stream.Collectors;
 public class TeacherService {
     private final TeacherRepository teacherRepository;
     private final GroupClassRepository groupClassRepository;
+    private final TeacherMapper teacherMapper;
 
-    public TeacherService(TeacherRepository teacherRepository, GroupClassRepository groupClassRepository) {
+    public TeacherService(TeacherRepository teacherRepository, GroupClassRepository groupClassRepository, TeacherMapper teacherMapper) {
         this.teacherRepository = teacherRepository;
         this.groupClassRepository = groupClassRepository;
+        this.teacherMapper = teacherMapper;
     }
 
     public TeacherResponseDTO create(TeacherDTO teacherDTO) {
@@ -31,26 +34,22 @@ public class TeacherService {
             throw new CustomException(ErrorCode.TEACHER_ALREADY_EXISTS);
         }
 
-        Teacher teacher = new Teacher();
-        teacher.setName(teacherDTO.getName());
-        teacher.setEmail(teacherDTO.getEmail());
-        teacher.setPassword(teacherDTO.getPassword());
-        teacher.setWorkloadHours(teacherDTO.getWorkloadHours());
+        Teacher teacher = teacherMapper.toEntity(teacherDTO);
 
         Teacher savedTeacher = teacherRepository.save(teacher);
-        return TeacherResponseDTO.fromEntity(savedTeacher);
+        return teacherMapper.toResponseDto(savedTeacher);
     }
 
     public List<TeacherResponseDTO> findAll() {
         return teacherRepository.findAll().stream()
-                .map(TeacherResponseDTO::fromEntity)
+                .map(teacherMapper :: toResponseDto)
                 .collect(Collectors.toList());
     }
 
     public TeacherResponseDTO findById(Long id) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.TEACHER_NOT_FOUND));
-        return TeacherResponseDTO.fromEntity(teacher);
+        return teacherMapper.toResponseDto(teacher);
     }
 
     public TeacherResponseDTO update(Long id, TeacherDTO teacherDTO) {
@@ -62,13 +61,10 @@ public class TeacherService {
             throw new CustomException(ErrorCode.TEACHER_ALREADY_EXISTS);
         }
 
-        existing.setName(teacherDTO.getName());
-        existing.setEmail(teacherDTO.getEmail());
-        existing.setPassword(teacherDTO.getPassword());
-        existing.setWorkloadHours(teacherDTO.getWorkloadHours());
+        Teacher teacher = teacherMapper.toEntity(teacherDTO);
+        Teacher updatedTeacher = teacherRepository.save(teacher);
 
-        Teacher updatedTeacher = teacherRepository.save(existing);
-        return TeacherResponseDTO.fromEntity(updatedTeacher);
+        return teacherMapper.toResponseDto(updatedTeacher);
     }
 
     public void delete(Long id) {
@@ -91,7 +87,6 @@ public class TeacherService {
         String[] parts = time.split(":");
         return Integer.parseInt(parts[0]) * 60 + Integer.parseInt(parts[1]);
     }
-
 
     @Transactional
     public TeacherResponseDTO assignGroup(GroupAssignmentDTO assignmentDTO) {
@@ -145,11 +140,8 @@ public class TeacherService {
         groupClassRepository.save(group);
         Teacher updatedTeacher = teacherRepository.save(teacher);
 
-        return TeacherResponseDTO.fromEntity(updatedTeacher);
+        return teacherMapper.toResponseDto(updatedTeacher);
     }
-
-
-
 
     @Transactional(readOnly = true)
     public TeacherScheduleDTO getSchedule(Long teacherId) {
@@ -160,18 +152,13 @@ public class TeacherService {
                 .mapToInt(GroupClass::getTotalHours)
                 .sum();
 
-        TeacherScheduleDTO scheduleDTO = new TeacherScheduleDTO();
-        scheduleDTO.setTeacherId(teacher.getId());
-        scheduleDTO.setTeacherName(teacher.getName());
-        scheduleDTO.setWorkloadHours(teacher.getWorkloadHours());
-        scheduleDTO.setAssignedHours(assignedHours);
-        scheduleDTO.setAvailableHours(teacher.getWorkloadHours() - assignedHours);
+        TeacherScheduleDTO scheduleDTO = teacherMapper.toScheduleDto(teacher);
 
         List<ClassScheduleDTO> schedules = new ArrayList<>();
 
         for (GroupClass group : teacher.getAssignedGroups()) {
             for (Schedule schedule : group.getSchedules()) {
-                // Calcular horas de este horario específico
+
                 String[] start = schedule.getStartTime().split(":");
                 String[] end = schedule.getEndTime().split(":");
 

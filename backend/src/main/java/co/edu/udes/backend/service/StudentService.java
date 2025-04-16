@@ -9,6 +9,7 @@ import co.edu.udes.backend.dto.student.*;
 import co.edu.udes.backend.dto.subject.SubjectStatusDTO;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.student.StudentMapper;
 import co.edu.udes.backend.models.*;
 import co.edu.udes.backend.repositories.CareerRepository;
 import co.edu.udes.backend.repositories.GroupClassRepository;
@@ -24,11 +25,13 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final CareerRepository careerRepository;
     private final GroupClassRepository groupClassRepository;
+    private final StudentMapper studentMapper;
 
-    public StudentService(StudentRepository studentRepository, CareerRepository careerRepository, GroupClassRepository groupClassRepository) {
+    public StudentService(StudentRepository studentRepository, CareerRepository careerRepository, GroupClassRepository groupClassRepository, StudentMapper studentMapper) {
         this.studentRepository = studentRepository;
         this.careerRepository = careerRepository;
         this.groupClassRepository = groupClassRepository;
+        this.studentMapper = studentMapper;
     }
 
     public StudentResponseDTO create(StudentDTO studentDTO) {
@@ -40,26 +43,22 @@ public class StudentService {
             throw new CustomException(ErrorCode.STUDENT_ALREADY_EXISTS);
         }
 
-        Student student = new Student();
-        student.setCode(studentDTO.getCode());
-        student.setName(studentDTO.getName());
-        student.setEmail(studentDTO.getEmail());
-        student.setPassword(studentDTO.getPassword());
+        Student student = studentMapper.toEntity(studentDTO);
 
         Student savedStudent = studentRepository.save(student);
-        return StudentResponseDTO.fromEntity(savedStudent);
+        return studentMapper.toResponseDTO(savedStudent);
     }
 
     public List<StudentResponseDTO> findAll() {
         return studentRepository.findAll().stream()
-                .map(StudentResponseDTO::fromEntity)
+                .map(studentMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     public StudentResponseDTO findById(Long id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
-        return StudentResponseDTO.fromEntity(student);
+        return studentMapper.toResponseDTO(student);
     }
 
     public StudentResponseDTO update(Long id, StudentDTO studentDTO) {
@@ -76,13 +75,10 @@ public class StudentService {
             throw new CustomException(ErrorCode.STUDENT_ALREADY_EXISTS);
         }
 
-        existing.setCode(studentDTO.getCode());
-        existing.setName(studentDTO.getName());
-        existing.setEmail(studentDTO.getEmail());
-        existing.setPassword(studentDTO.getPassword());
+        Student studentResponse = studentMapper.toEntity(studentDTO);
 
-        Student updatedStudent = studentRepository.save(existing);
-        return StudentResponseDTO.fromEntity(updatedStudent);
+        Student updatedStudent = studentRepository.save(studentResponse);
+        return studentMapper.toResponseDTO(updatedStudent);
     }
 
     public void delete(Long id) {
@@ -102,7 +98,7 @@ public class StudentService {
 
         student.setCareer(career);
         Student updatedStudent = studentRepository.save(student);
-        return StudentResponseDTO.fromEntity(updatedStudent);
+        return studentMapper.toResponseDTO(updatedStudent);
     }
 
     @Transactional
@@ -151,7 +147,6 @@ public class StudentService {
             throw new CustomException(ErrorCode.STUDENT_ALREADY_ENROLLED);
         }
 
-
         student.getEnrolledGroups().add(group);
         group.getStudents().add(student);
 
@@ -160,7 +155,7 @@ public class StudentService {
         groupClassRepository.save(group);
         Student updatedStudent = studentRepository.save(student);
 
-        return StudentResponseDTO.fromEntity(updatedStudent);
+        return studentMapper.toResponseDTO(updatedStudent);
     }
 
     @Transactional(readOnly = true)

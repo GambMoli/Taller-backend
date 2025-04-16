@@ -16,19 +16,4 @@ public class TeacherResponseDTO {
     private Integer workloadHours;
     private Integer assignedHours;
     private Integer availableHours;
-
-    public static TeacherResponseDTO fromEntity(Teacher teacher) {
-        int assignedHours = teacher.getAssignedGroups().stream()
-                .mapToInt(GroupClass::getTotalHours)
-                .sum();
-
-        return new TeacherResponseDTO(
-                teacher.getId(),
-                teacher.getName(),
-                teacher.getEmail(),
-                teacher.getWorkloadHours(),
-                assignedHours,
-                teacher.getWorkloadHours() - assignedHours
-        );
-    }
 }
