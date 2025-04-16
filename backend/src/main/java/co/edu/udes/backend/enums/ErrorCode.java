@@ -31,8 +31,8 @@ public enum ErrorCode {
     GROUP_ALREADY_ASSIGNED_TO_ANOTHER_TEACHER("El grupo ya está asignado a otro profesor."),
     TEACHER_SCHEDULE_CONFLICT("El profesor tiene asignada una clase durante, o a la misma hora."),
     GROUP_SCHEDULE_CONFLICT("El grupo ya tiene un horario asignado a la misma hora, o durante esa hora."),
-    STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo.");
-
+    STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo."),
+    NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada.");
 
     private final String message;
 
