@@ -3,19 +3,22 @@ package co.edu.udes.backend.service;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.period.PeriodResponseDTO;
+import co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
 import co.edu.udes.backend.dto.student.*;
+import co.edu.udes.backend.dto.subject.SubjectGradeDTO;
 import co.edu.udes.backend.dto.subject.SubjectStatusDTO;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.period.PeriodMapper;
 import co.edu.udes.backend.mappers.student.StudentMapper;
 import co.edu.udes.backend.models.*;
-import co.edu.udes.backend.repositories.CareerRepository;
-import co.edu.udes.backend.repositories.GroupClassRepository;
-import co.edu.udes.backend.repositories.StudentRepository;
+import co.edu.udes.backend.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,12 +29,24 @@ public class StudentService {
     private final CareerRepository careerRepository;
     private final GroupClassRepository groupClassRepository;
     private final StudentMapper studentMapper;
+    private final PeriodMapper periodMapper;
+    private final SemesterRepository semesterRepository;
+    private final PeriodRepository periodRepository;
 
-    public StudentService(StudentRepository studentRepository, CareerRepository careerRepository, GroupClassRepository groupClassRepository, StudentMapper studentMapper) {
+    public StudentService(StudentRepository studentRepository,
+                          CareerRepository careerRepository,
+                          GroupClassRepository groupClassRepository,
+                          StudentMapper studentMapper,
+                          PeriodMapper periodMapper,
+                          SemesterRepository semesterRepository,
+                          PeriodRepository periodRepository) {
         this.studentRepository = studentRepository;
         this.careerRepository = careerRepository;
         this.groupClassRepository = groupClassRepository;
         this.studentMapper = studentMapper;
+        this.periodMapper = periodMapper;
+        this.semesterRepository = semesterRepository;
+        this.periodRepository = periodRepository;
     }
 
     public StudentResponseDTO create(StudentDTO studentDTO) {
@@ -290,4 +305,90 @@ public class StudentService {
 
         return StudentResponseDTO.fromEntity(updatedStudent);
     }
+
+    @Transactional
+    public void initializeStudentPeriods(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        if (student.getCareer() == null) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED_IN_CAREER);
+        }
+
+
+        student.getPeriods().clear();
+
+
+        student.initializeDefaultPeriods();
+        studentRepository.save(student);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentSemesterPeriodsDTO> getStudentPeriods(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        if (student.getCareer() == null) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED_IN_CAREER);
+        }
+
+        List<StudentSemesterPeriodsDTO> result = new ArrayList<>();
+
+        // Group periods by semester
+        Map<Semester, List<Period>> periodsBySemester = student.getPeriods().stream()
+                .collect(Collectors.groupingBy(Period::getSemester));
+
+        // For each semester, create a DTO with its periods
+        for (Map.Entry<Semester, List<Period>> entry : periodsBySemester.entrySet()) {
+            Semester semester = entry.getKey();
+            List<Period> periods = entry.getValue();
+
+            StudentSemesterPeriodsDTO semesterDTO = new StudentSemesterPeriodsDTO();
+            semesterDTO.setSemesterId(semester.getId());
+            semesterDTO.setSemesterNumber(semester.getNumber());
+
+            List<PeriodWithSubjectsDTO> periodDTOs = new ArrayList<>();
+            for (Period period : periods) {
+                co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO periodDTO = new co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO();
+                periodDTO.setPeriodId(period.getId());
+                periodDTO.setNamePeriod(period.getName());
+                periodDTO.setWeight(period.getWeight());
+
+                // Get all enrolled subjects for this semester
+                Map<Subject, Double> subjectsWithGrades = new HashMap<>();
+
+                // Find all subjects for this semester that the student is enrolled in
+                Set<Subject> enrolledSubjects = student.getEnrolledGroups().stream()
+                        .map(GroupClass::getSubject)
+                        .filter(subject -> subject.getSemester().equals(semester))
+                        .collect(Collectors.toSet());
+
+                // For each subject, find the grade for this period if exists
+                Map<String, co.edu.udes.backend.dto.period.SubjectGradeDTO> subjectGrades = new HashMap<>();
+
+                for (Subject subject : enrolledSubjects) {
+                    co.edu.udes.backend.dto.period.SubjectGradeDTO gradeInfo = new co.edu.udes.backend.dto.period.SubjectGradeDTO();
+                    gradeInfo.setId(subject.getId());
+
+                    // Find grade for this subject in this period
+                    Optional<Grade> grade = period.getGrades().stream()
+                            .filter(g -> g.getSubject().getId().equals(subject.getId()))
+                            .findFirst();
+
+                    gradeInfo.setNoteStudent(grade.map(Grade::getValue).orElse(null));
+                    subjectGrades.put(subject.getName(), gradeInfo);
+                }
+
+                periodDTO.setSubjects(subjectGrades);
+                periodDTOs.add(periodDTO);
+            }
+
+            semesterDTO.setPeriods(periodDTOs);
+            result.add(semesterDTO);
+        }
+
+        return result;
+    }
+
+
 }

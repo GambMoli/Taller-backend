@@ -19,12 +19,20 @@ public class Period {
     private String name;
     private LocalDate startDate;
     private LocalDate endDate;
+
     private Double weight;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "semester_id")
     private Semester semester;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id")
+    private Student student;
+
     @OneToMany(mappedBy = "period", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Grade> grades = new ArrayList<>();
+
+    private Double finalGrade;
+    private Boolean approved;
 }

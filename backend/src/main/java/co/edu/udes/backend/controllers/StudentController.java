@@ -75,4 +75,18 @@ public class StudentController {
                 enrollmentDTO.getStudentId(),
                 enrollmentDTO.getGroupId()));
     }
+
+    @PostMapping("/{studentId}/periods/initialize")
+    public ResponseEntity<Void> initializeStudentPeriods(@PathVariable Long studentId) {
+        studentService.initializeStudentPeriods(studentId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{studentId}/periods")
+    public ResponseEntity<List<StudentSemesterPeriodsDTO>> getStudentPeriods(@PathVariable Long studentId) {
+        List<StudentSemesterPeriodsDTO> periods = studentService.getStudentPeriods(studentId);
+        return ResponseEntity.ok(periods);
+    }
+
+
 }
