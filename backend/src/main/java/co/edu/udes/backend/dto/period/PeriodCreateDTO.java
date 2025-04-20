@@ -10,5 +10,5 @@ public class PeriodCreateDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private Double weight;
-    private Long semesterId;
+    private Long studentId;
 }

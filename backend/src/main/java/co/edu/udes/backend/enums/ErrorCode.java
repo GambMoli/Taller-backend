@@ -35,7 +35,9 @@ public enum ErrorCode {
     NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada."),
     INVALID_PERIOD_DATES("Fecha de periodos invalidas."),
     PERIOD_NOT_FOUND("Periodo no encontrado"),
-    SEMESTER_DATES_REQUIRED("Las fechas son requeridas.");
+    SEMESTER_DATES_REQUIRED("Las fechas son requeridas."),
+    PERIOD_ALREADY_EXISTS("El periodo no existe"),
+    PERIODS_ALREADY_INITIALIZED("Los periodos ya fueron iniciados.");
 
 
     private final String message;
