@@ -32,7 +32,11 @@ public enum ErrorCode {
     TEACHER_SCHEDULE_CONFLICT("El profesor tiene asignada una clase durante, o a la misma hora."),
     GROUP_SCHEDULE_CONFLICT("El grupo ya tiene un horario asignado a la misma hora, o durante esa hora."),
     STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo."),
-    NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada.");
+    NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada."),
+    INVALID_PERIOD_DATES("Fecha de periodos invalidas."),
+    PERIOD_NOT_FOUND("Periodo no encontrado"),
+    SEMESTER_DATES_REQUIRED("Las fechas son requeridas.");
+
 
     private final String message;
 
