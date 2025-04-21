@@ -33,6 +33,13 @@ public enum ErrorCode {
     GROUP_SCHEDULE_CONFLICT("El grupo ya tiene un horario asignado a la misma hora, o durante esa hora."),
     STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo."),
     NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada."),
+    CHAT_NOT_FOUND("Chat no Encontrado"),
+    STUDENT_NOT_IN_CHAT("Estudiante no esta en este chat"),
+    INVALID_MESSAGE_TARGET("Debe seleccionar un destino valido para el mensaje"),
+    FORUM_NOT_FOUND("Foro no encontrado"),
+    STUDENT_NOT_IN_FORUM_GROUP("Estudiante no esta en el grupo"),
+    NOTIFICATION_NOT_FOUND(" Notificacion no encontrada"),
+    TEACHER_NOT_ASSIGNED_TO_GROUP("Profesor no asignado al grupo"),
     INVALID_PERIOD_DATES("Fecha de periodos invalidas."),
     PERIOD_NOT_FOUND("Periodo no encontrado"),
     SEMESTER_DATES_REQUIRED("Las fechas son requeridas.");
