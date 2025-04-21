@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -39,4 +40,7 @@ public class Student {
             inverseJoinColumns = @JoinColumn(name = "group_id")
     )
     private Set<GroupClass> enrolledGroups = new HashSet<>();
+
+    @OneToMany(mappedBy = "student")
+    private List<Reserve> reserve;
 }

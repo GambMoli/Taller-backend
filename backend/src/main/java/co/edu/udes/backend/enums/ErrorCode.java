@@ -32,8 +32,8 @@ public enum ErrorCode {
     TEACHER_SCHEDULE_CONFLICT("El profesor tiene asignada una clase durante, o a la misma hora."),
     GROUP_SCHEDULE_CONFLICT("El grupo ya tiene un horario asignado a la misma hora, o durante esa hora."),
     STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo."),
-    NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada.");
-
+    NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada."),
+    EXIST_RESERVE("");
     private final String message;
 
     ErrorCode(String message) {

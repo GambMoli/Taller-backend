@@ -3,16 +3,19 @@ package co.edu.udes.backend.service;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
 import co.edu.udes.backend.dto.student.*;
 import co.edu.udes.backend.dto.subject.SubjectStatusDTO;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.reserve.ReserveMapper;
 import co.edu.udes.backend.mappers.student.StudentMapper;
 import co.edu.udes.backend.models.*;
 import co.edu.udes.backend.repositories.CareerRepository;
 import co.edu.udes.backend.repositories.GroupClassRepository;
+import co.edu.udes.backend.repositories.ReserveRepository;
 import co.edu.udes.backend.repositories.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,12 +29,16 @@ public class StudentService {
     private final CareerRepository careerRepository;
     private final GroupClassRepository groupClassRepository;
     private final StudentMapper studentMapper;
+    private final ReserveRepository reserveRepository;
+    private final ReserveMapper reserveMapper;
 
-    public StudentService(StudentRepository studentRepository, CareerRepository careerRepository, GroupClassRepository groupClassRepository, StudentMapper studentMapper) {
+    public StudentService(StudentRepository studentRepository, CareerRepository careerRepository, GroupClassRepository groupClassRepository, StudentMapper studentMapper , ReserveRepository reserveRepository, ReserveMapper reserveMapper) {
         this.studentRepository = studentRepository;
         this.careerRepository = careerRepository;
         this.groupClassRepository = groupClassRepository;
         this.studentMapper = studentMapper;
+        this.reserveRepository = reserveRepository;
+        this.reserveMapper = reserveMapper;
     }
 
     public StudentResponseDTO create(StudentDTO studentDTO) {
@@ -290,4 +297,15 @@ public class StudentService {
 
         return StudentResponseDTO.fromEntity(updatedStudent);
     }
+
+    public List<ReserveResponseDTO> getReservesByStudent(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+
+        List<Reserve> reserves = reserveRepository.findByStudent(student);
+        return reserves.stream()
+                .map(reserveMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
 }

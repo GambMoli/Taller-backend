@@ -3,6 +3,7 @@ package co.edu.udes.backend.controllers;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
 import co.edu.udes.backend.dto.student.*;
@@ -74,5 +75,9 @@ public class StudentController {
         return ResponseEntity.ok(studentService.cancelGroupEnrollment(
                 enrollmentDTO.getStudentId(),
                 enrollmentDTO.getGroupId()));
+    }
+    @GetMapping("/{id}/my_reserve")
+    public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable long Id){
+        return ResponseEntity.ok(studentService.getReservesByStudent(Id));
     }
 }
