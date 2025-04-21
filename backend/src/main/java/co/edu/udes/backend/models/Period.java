@@ -17,7 +17,11 @@ public class Period {
     private Long id;
 
     private String name;
+
+    @Column(nullable = false)
     private LocalDate startDate;
+
+    @Column(nullable = false)
     private LocalDate endDate;
 
     private Double weight;
