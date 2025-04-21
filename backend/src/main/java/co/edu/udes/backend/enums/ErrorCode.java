@@ -39,7 +39,23 @@ public enum ErrorCode {
     FORUM_NOT_FOUND("Foro no encontrado"),
     STUDENT_NOT_IN_FORUM_GROUP("Estudiante no esta en el grupo"),
     NOTIFICATION_NOT_FOUND(" Notificacion no encontrada"),
-    TEACHER_NOT_ASSIGNED_TO_GROUP("Profesor no asignado al grupo");
+    TEACHER_NOT_ASSIGNED_TO_GROUP("Profesor no asignado al grupo"),
+    INVALID_PERIOD_DATES("Fecha de periodos invalidas."),
+    PERIOD_NOT_FOUND("Periodo no encontrado"),
+    SEMESTER_DATES_REQUIRED("Las fechas son requeridas."),
+    PERIOD_ALREADY_EXISTS("El periodo no existe"),
+    PERIODS_ALREADY_INITIALIZED("Los periodos ya fueron iniciados."),
+    ATTENDANCE_NOT_FOUND("Asistencia no encontrada"),
+    ATTENDANCE_ALREADY_EXISTS("La asistencia ya exsite"),
+    INVALID_CLASS_DATE("Fecha de clase invalida."),
+    STUDENT_NOT_IN_GROUP("El estudiante no se encuentra en el grupo."),
+    NO_CLASSES_IN_PERIOD("La clase no esta en el periodo (corte)"),
+    EMPTY_STUDENT_LIST("Lista de estudiantes vacia."),
+    PERIOD_DATES_MISSING("Fechas de periodo vacia."),
+    INVALID_PERIOD_CONFIGURATION("Configuracion de periodo invalida."),
+    INVALID_PERIOD_WEIGHTS("Porcentaje de periodos invalidos."),
+    MISSING_PERIOD_DATES("No hay fechas de periodos.");
+
 
     private final String message;
 
