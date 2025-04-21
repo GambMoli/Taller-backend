@@ -15,4 +15,9 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
 
     @Query("SELECT c FROM Chat c WHERE c.participant1.id = :studentId OR c.participant2.id = :studentId")
     List<Chat> findByParticipantId(Long studentId);
+
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
+            "FROM Chat c WHERE c.id = :chatId AND " +
+            "(c.participant1.id = :studentId OR c.participant2.id = :studentId)")
+    boolean isStudentInChat(Long chatId, Long studentId);
 }

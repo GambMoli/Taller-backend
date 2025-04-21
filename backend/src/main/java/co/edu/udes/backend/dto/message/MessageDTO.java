@@ -12,4 +12,5 @@ public class MessageDTO {
     private Long senderId;
     private String senderName;
     private Long chatId;
+    private Long forumId;
 }

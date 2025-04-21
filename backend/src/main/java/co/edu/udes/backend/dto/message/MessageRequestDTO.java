@@ -6,6 +6,7 @@ import lombok.Data;
 public class MessageRequestDTO {
     private Long senderId;
     private Long chatId;
+    private Long forumId;
     private String title;
     private String body;
 }
