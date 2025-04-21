@@ -31,7 +31,23 @@ public enum ErrorCode {
     GROUP_ALREADY_ASSIGNED_TO_ANOTHER_TEACHER("El grupo ya está asignado a otro profesor."),
     TEACHER_SCHEDULE_CONFLICT("El profesor tiene asignada una clase durante, o a la misma hora."),
     GROUP_SCHEDULE_CONFLICT("El grupo ya tiene un horario asignado a la misma hora, o durante esa hora."),
-    STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo.");
+    STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo."),
+    NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada."),
+    INVALID_PERIOD_DATES("Fecha de periodos invalidas."),
+    PERIOD_NOT_FOUND("Periodo no encontrado"),
+    SEMESTER_DATES_REQUIRED("Las fechas son requeridas."),
+    PERIOD_ALREADY_EXISTS("El periodo no existe"),
+    PERIODS_ALREADY_INITIALIZED("Los periodos ya fueron iniciados."),
+    ATTENDANCE_NOT_FOUND("Asistencia no encontrada"),
+    ATTENDANCE_ALREADY_EXISTS("La asistencia ya exsite"),
+    INVALID_CLASS_DATE("Fecha de clase invalida."),
+    STUDENT_NOT_IN_GROUP("El estudiante no se encuentra en el grupo."),
+    NO_CLASSES_IN_PERIOD("La clase no esta en el periodo (corte)"),
+    EMPTY_STUDENT_LIST("Lista de estudiantes vacia."),
+    PERIOD_DATES_MISSING("Fechas de periodo vacia."),
+    INVALID_PERIOD_CONFIGURATION("Configuracion de periodo invalida."),
+    INVALID_PERIOD_WEIGHTS("Porcentaje de periodos invalidos."),
+    MISSING_PERIOD_DATES("No hay fechas de periodos.");
 
 
     private final String message;
