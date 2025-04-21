@@ -27,6 +27,10 @@ public class MessageService {
         Student sender = studentRepository.findById(messageRequest.getSenderId())
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
+        if(!isMatriculed(sender)){
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED);
+        }
+
         boolean hasChat = messageRequest.getChatId() != null;
         boolean hasForum = messageRequest.getForumId() != null;
 
@@ -38,6 +42,7 @@ public class MessageService {
         message.setTitle(messageRequest.getTitle());
         message.setBody(messageRequest.getBody());
         message.setSender(sender);
+
 
         if (hasChat) {
             Chat chat = chatRepository.findById(messageRequest.getChatId())
@@ -63,6 +68,9 @@ public class MessageService {
         return convertToDTO(savedMessage);
     }
 
+    private boolean isMatriculed (Student student){
+        return student.getCareer() != null;
+    }
 
     private boolean isParticipant(Chat chat, Long studentId) {
         return chat.getParticipant1().getId().equals(studentId) ||
