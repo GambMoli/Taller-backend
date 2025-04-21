@@ -3,6 +3,7 @@ package co.edu.udes.backend.controllers;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
 import co.edu.udes.backend.dto.student.*;
@@ -76,9 +77,9 @@ public class StudentController {
                 enrollmentDTO.getGroupId()));
     }
 
-    @PostMapping("/{studentId}/periods/initialize")
-    public ResponseEntity<Void> initializeStudentPeriods(@PathVariable Long studentId) {
-        studentService.initializeStudentPeriods(studentId);
+    @PostMapping("/periods/initialize")
+    public ResponseEntity<Void> initializeStudentPeriods(@RequestBody InitializePeriodsDTO initializeDTO) {
+        studentService.initializeStudentPeriods(initializeDTO);
         return ResponseEntity.ok().build();
     }
 

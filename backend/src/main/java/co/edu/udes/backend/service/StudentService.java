@@ -3,6 +3,7 @@ package co.edu.udes.backend.service;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
 import co.edu.udes.backend.dto.period.PeriodResponseDTO;
 import co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
@@ -134,6 +135,12 @@ public class StudentService {
         boolean subjectInCareer = student.getCareer().getSemesters().stream()
                 .flatMap(semester -> semester.getSubjects().stream())
                 .anyMatch(s -> s.getId().equals(subject.getId()));
+
+        System.out.println("Career semesters: " + student.getCareer().getSemesters().size());
+        student.getCareer().getSemesters().forEach(semester -> {
+            System.out.println("Semester " + semester.getNumber() + " subjects: " +
+                    semester.getSubjects().stream().map(Subject::getName).collect(Collectors.joining(", ")));
+        });
 
         if (!subjectInCareer) {
             throw new CustomException(ErrorCode.SUBJECT_NOT_IN_CAREER);
@@ -307,19 +314,56 @@ public class StudentService {
     }
 
     @Transactional
-    public void initializeStudentPeriods(Long studentId) {
-        Student student = studentRepository.findById(studentId)
+    public void initializeStudentPeriods(InitializePeriodsDTO initializeDTO) {
+        Student student = studentRepository.findById(initializeDTO.getStudentId())
                 .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         if (student.getCareer() == null) {
             throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED_IN_CAREER);
         }
 
+        // Validar la configuración de períodos
+        if (initializeDTO.getPeriodConfigurations() == null || initializeDTO.getPeriodConfigurations().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_PERIOD_CONFIGURATION);
+        }
 
+        // Verificar que los pesos sumen 1.0 (100%)
+        double totalWeight = initializeDTO.getPeriodConfigurations().stream()
+                .mapToDouble(InitializePeriodsDTO.PeriodDateRangeDTO::getWeight)
+                .sum();
+
+        if (Math.abs(totalWeight - 1.0) > 0.01) {
+            throw new CustomException(ErrorCode.INVALID_PERIOD_WEIGHTS);
+        }
+
+        // Verificar que las fechas sean válidas
+        for (InitializePeriodsDTO.PeriodDateRangeDTO periodConfig : initializeDTO.getPeriodConfigurations()) {
+            if (periodConfig.getStartDate() == null || periodConfig.getEndDate() == null) {
+                throw new CustomException(ErrorCode.MISSING_PERIOD_DATES);
+            }
+
+            if (periodConfig.getStartDate().isAfter(periodConfig.getEndDate())) {
+                throw new CustomException(ErrorCode.INVALID_PERIOD_DATES);
+            }
+        }
+
+        // Eliminar períodos existentes
         student.getPeriods().clear();
 
+        // Crear nuevos períodos para cada semestre
+        for (Semester semester : student.getCareer().getSemesters()) {
+            for (InitializePeriodsDTO.PeriodDateRangeDTO periodConfig : initializeDTO.getPeriodConfigurations()) {
+                Period period = new Period();
+                period.setName(periodConfig.getName());
+                period.setWeight(periodConfig.getWeight());
+                period.setStartDate(periodConfig.getStartDate());
+                period.setEndDate(periodConfig.getEndDate());
+                period.setStudent(student);
+                period.setSemester(semester);
+                student.getPeriods().add(period);
+            }
+        }
 
-        student.initializeDefaultPeriods();
         studentRepository.save(student);
     }
 
