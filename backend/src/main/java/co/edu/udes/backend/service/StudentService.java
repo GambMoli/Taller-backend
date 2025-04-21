@@ -3,19 +3,23 @@ package co.edu.udes.backend.service;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
+import co.edu.udes.backend.dto.period.PeriodResponseDTO;
+import co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
 import co.edu.udes.backend.dto.student.*;
+import co.edu.udes.backend.dto.subject.SubjectGradeDTO;
 import co.edu.udes.backend.dto.subject.SubjectStatusDTO;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.period.PeriodMapper;
 import co.edu.udes.backend.mappers.student.StudentMapper;
 import co.edu.udes.backend.models.*;
-import co.edu.udes.backend.repositories.CareerRepository;
-import co.edu.udes.backend.repositories.GroupClassRepository;
-import co.edu.udes.backend.repositories.StudentRepository;
+import co.edu.udes.backend.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,12 +30,24 @@ public class StudentService {
     private final CareerRepository careerRepository;
     private final GroupClassRepository groupClassRepository;
     private final StudentMapper studentMapper;
+    private final PeriodMapper periodMapper;
+    private final SemesterRepository semesterRepository;
+    private final PeriodRepository periodRepository;
 
-    public StudentService(StudentRepository studentRepository, CareerRepository careerRepository, GroupClassRepository groupClassRepository, StudentMapper studentMapper) {
+    public StudentService(StudentRepository studentRepository,
+                          CareerRepository careerRepository,
+                          GroupClassRepository groupClassRepository,
+                          StudentMapper studentMapper,
+                          PeriodMapper periodMapper,
+                          SemesterRepository semesterRepository,
+                          PeriodRepository periodRepository) {
         this.studentRepository = studentRepository;
         this.careerRepository = careerRepository;
         this.groupClassRepository = groupClassRepository;
         this.studentMapper = studentMapper;
+        this.periodMapper = periodMapper;
+        this.semesterRepository = semesterRepository;
+        this.periodRepository = periodRepository;
     }
 
     public StudentResponseDTO create(StudentDTO studentDTO) {
@@ -119,6 +135,12 @@ public class StudentService {
         boolean subjectInCareer = student.getCareer().getSemesters().stream()
                 .flatMap(semester -> semester.getSubjects().stream())
                 .anyMatch(s -> s.getId().equals(subject.getId()));
+
+        System.out.println("Career semesters: " + student.getCareer().getSemesters().size());
+        student.getCareer().getSemesters().forEach(semester -> {
+            System.out.println("Semester " + semester.getNumber() + " subjects: " +
+                    semester.getSubjects().stream().map(Subject::getName).collect(Collectors.joining(", ")));
+        });
 
         if (!subjectInCareer) {
             throw new CustomException(ErrorCode.SUBJECT_NOT_IN_CAREER);
@@ -290,4 +312,127 @@ public class StudentService {
 
         return StudentResponseDTO.fromEntity(updatedStudent);
     }
+
+    @Transactional
+    public void initializeStudentPeriods(InitializePeriodsDTO initializeDTO) {
+        Student student = studentRepository.findById(initializeDTO.getStudentId())
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        if (student.getCareer() == null) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED_IN_CAREER);
+        }
+
+        // Validar la configuración de períodos
+        if (initializeDTO.getPeriodConfigurations() == null || initializeDTO.getPeriodConfigurations().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_PERIOD_CONFIGURATION);
+        }
+
+        // Verificar que los pesos sumen 1.0 (100%)
+        double totalWeight = initializeDTO.getPeriodConfigurations().stream()
+                .mapToDouble(InitializePeriodsDTO.PeriodDateRangeDTO::getWeight)
+                .sum();
+
+        if (Math.abs(totalWeight - 1.0) > 0.01) {
+            throw new CustomException(ErrorCode.INVALID_PERIOD_WEIGHTS);
+        }
+
+        // Verificar que las fechas sean válidas
+        for (InitializePeriodsDTO.PeriodDateRangeDTO periodConfig : initializeDTO.getPeriodConfigurations()) {
+            if (periodConfig.getStartDate() == null || periodConfig.getEndDate() == null) {
+                throw new CustomException(ErrorCode.MISSING_PERIOD_DATES);
+            }
+
+            if (periodConfig.getStartDate().isAfter(periodConfig.getEndDate())) {
+                throw new CustomException(ErrorCode.INVALID_PERIOD_DATES);
+            }
+        }
+
+        // Eliminar períodos existentes
+        student.getPeriods().clear();
+
+        // Crear nuevos períodos para cada semestre
+        for (Semester semester : student.getCareer().getSemesters()) {
+            for (InitializePeriodsDTO.PeriodDateRangeDTO periodConfig : initializeDTO.getPeriodConfigurations()) {
+                Period period = new Period();
+                period.setName(periodConfig.getName());
+                period.setWeight(periodConfig.getWeight());
+                period.setStartDate(periodConfig.getStartDate());
+                period.setEndDate(periodConfig.getEndDate());
+                period.setStudent(student);
+                period.setSemester(semester);
+                student.getPeriods().add(period);
+            }
+        }
+
+        studentRepository.save(student);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentSemesterPeriodsDTO> getStudentPeriods(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
+
+        if (student.getCareer() == null) {
+            throw new CustomException(ErrorCode.STUDENT_NOT_ENROLLED_IN_CAREER);
+        }
+
+        List<StudentSemesterPeriodsDTO> result = new ArrayList<>();
+
+        // Group periods by semester
+        Map<Semester, List<Period>> periodsBySemester = student.getPeriods().stream()
+                .collect(Collectors.groupingBy(Period::getSemester));
+
+        // For each semester, create a DTO with its periods
+        for (Map.Entry<Semester, List<Period>> entry : periodsBySemester.entrySet()) {
+            Semester semester = entry.getKey();
+            List<Period> periods = entry.getValue();
+
+            StudentSemesterPeriodsDTO semesterDTO = new StudentSemesterPeriodsDTO();
+            semesterDTO.setSemesterId(semester.getId());
+            semesterDTO.setSemesterNumber(semester.getNumber());
+
+            List<PeriodWithSubjectsDTO> periodDTOs = new ArrayList<>();
+            for (Period period : periods) {
+                co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO periodDTO = new co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO();
+                periodDTO.setPeriodId(period.getId());
+                periodDTO.setNamePeriod(period.getName());
+                periodDTO.setWeight(period.getWeight());
+
+                // Get all enrolled subjects for this semester
+                Map<Subject, Double> subjectsWithGrades = new HashMap<>();
+
+                // Find all subjects for this semester that the student is enrolled in
+                Set<Subject> enrolledSubjects = student.getEnrolledGroups().stream()
+                        .map(GroupClass::getSubject)
+                        .filter(subject -> subject.getSemester().equals(semester))
+                        .collect(Collectors.toSet());
+
+                // For each subject, find the grade for this period if exists
+                Map<String, co.edu.udes.backend.dto.period.SubjectGradeDTO> subjectGrades = new HashMap<>();
+
+                for (Subject subject : enrolledSubjects) {
+                    co.edu.udes.backend.dto.period.SubjectGradeDTO gradeInfo = new co.edu.udes.backend.dto.period.SubjectGradeDTO();
+                    gradeInfo.setId(subject.getId());
+
+                    // Find grade for this subject in this period
+                    Optional<Grade> grade = period.getGrades().stream()
+                            .filter(g -> g.getSubject().getId().equals(subject.getId()))
+                            .findFirst();
+
+                    gradeInfo.setNoteStudent(grade.map(Grade::getValue).orElse(null));
+                    subjectGrades.put(subject.getName(), gradeInfo);
+                }
+
+                periodDTO.setSubjects(subjectGrades);
+                periodDTOs.add(periodDTO);
+            }
+
+            semesterDTO.setPeriods(periodDTOs);
+            result.add(semesterDTO);
+        }
+
+        return result;
+    }
+
+
 }
