@@ -54,8 +54,10 @@ public enum ErrorCode {
     PERIOD_DATES_MISSING("Fechas de periodo vacia."),
     INVALID_PERIOD_CONFIGURATION("Configuracion de periodo invalida."),
     INVALID_PERIOD_WEIGHTS("Porcentaje de periodos invalidos."),
-    MISSING_PERIOD_DATES("No hay fechas de periodos.");
-
+    MISSING_PERIOD_DATES("No hay fechas de periodos."),
+    ROLE_NOT_FOUND("Rol no encontrado"),
+    INVALID_ROLE("Rol invalido"),
+    INVALID_CREDENTIALS("Contraseña o email invalidos.");
 
     private final String message;
 

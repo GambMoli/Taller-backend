@@ -17,6 +17,7 @@ import co.edu.udes.backend.mappers.period.PeriodMapper;
 import co.edu.udes.backend.mappers.student.StudentMapper;
 import co.edu.udes.backend.models.*;
 import co.edu.udes.backend.repositories.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,8 @@ public class StudentService {
     private final PeriodMapper periodMapper;
     private final SemesterRepository semesterRepository;
     private final PeriodRepository periodRepository;
+    @Autowired
+    private RoleService roleService;
 
     public StudentService(StudentRepository studentRepository,
                           CareerRepository careerRepository,
@@ -60,6 +63,9 @@ public class StudentService {
         }
 
         Student student = studentMapper.toEntity(studentDTO);
+
+
+        student.setRole(roleService.getRoleByName(RoleService.ROLE_STUDENT));
 
         Student savedStudent = studentRepository.save(student);
         return studentMapper.toResponseDTO(savedStudent);

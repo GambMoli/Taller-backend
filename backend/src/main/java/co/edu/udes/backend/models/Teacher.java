@@ -24,6 +24,10 @@ public class Teacher {
     @Column(nullable = false)
     private String password;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
     @Column(nullable = false)
     private Integer workloadHours;
 

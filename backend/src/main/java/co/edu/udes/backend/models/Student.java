@@ -27,6 +27,10 @@ public class Student {
     @Column(nullable = false)
     private String password;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
     @ManyToOne()
     @JoinColumn(name = "career_id")
     private Career career;
@@ -41,6 +45,4 @@ public class Student {
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Period> periods = new ArrayList<>();
-
-
 }
