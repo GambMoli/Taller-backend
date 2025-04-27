@@ -2,6 +2,8 @@ package co.edu.udes.backend.service;
 
 import co.edu.udes.backend.dto.maintenanceRecord.MaintenanceRecordDTO;
 import co.edu.udes.backend.dto.maintenanceRecord.MaintenanceRecordResponseDTO;
+import co.edu.udes.backend.enums.ErrorCode;
+import co.edu.udes.backend.exceptions.CustomException;
 import co.edu.udes.backend.mappers.maintenanceRecord.MaintenanceRecordMapper;
 import co.edu.udes.backend.models.MaintenanceRecord;
 import co.edu.udes.backend.models.Material;
@@ -32,15 +34,15 @@ public class MaintenanceRecordService {
 
     public MaintenanceRecordResponseDTO getOne(long id){
         MaintenanceRecord maintenanceRecord= maintenanceRecordRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("No existe ese mantenimiento"));
+                .orElseThrow(()-> new CustomException(ErrorCode.MAINTENANCE_NOT_EXISTS));
 
         return  maintenanceRecordMapper.toResponseDTO(maintenanceRecord);
     }
 
     public MaintenanceRecordResponseDTO createMaintenance(MaintenanceRecordDTO maintenanceRecordDTO) {
-        // Buscar el material por ID
+
         Material material = materialRepository.findById(maintenanceRecordDTO.getMaterialid())
-                .orElseThrow(() -> new RuntimeException("No existe el material con ID: " + maintenanceRecordDTO.getMaterialid()));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_MATERIAL));
 
 
         MaintenanceRecord maintenanceRecord = new MaintenanceRecord();
@@ -60,11 +62,11 @@ public class MaintenanceRecordService {
     public MaintenanceRecordResponseDTO modifyMaintenance(long id, MaintenanceRecordDTO maintenanceRecordDTO) {
 
         MaintenanceRecord maintenanceRecord = maintenanceRecordRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No existe ese mantenimiento"));
+                .orElseThrow(() -> new CustomException(ErrorCode.MAINTENANCE_NOT_EXISTS));
 
 
         Material material = materialRepository.findById(maintenanceRecordDTO.getMaterialid())
-                .orElseThrow(() -> new RuntimeException("No existe el material con ID: " + maintenanceRecordDTO.getMaterialid()));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_MATERIAL));
 
 
         maintenanceRecord.setCode(maintenanceRecordDTO.getCode());
@@ -82,7 +84,7 @@ public class MaintenanceRecordService {
 
     public void deleteMaintenance(long id){
         MaintenanceRecord maintenanceRecord= maintenanceRecordRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("No existe ese mantenimiento"));
+                .orElseThrow(()-> new CustomException(ErrorCode.MAINTENANCE_NOT_EXISTS));
         maintenanceRecordRepository.deleteById(id);
     }
 }

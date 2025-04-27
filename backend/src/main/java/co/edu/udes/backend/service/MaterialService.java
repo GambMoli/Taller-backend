@@ -3,6 +3,8 @@ package co.edu.udes.backend.service;
 import co.edu.udes.backend.dto.material.MaterialDTO;
 import co.edu.udes.backend.dto.material.MaterialResponseDTO;
 
+import co.edu.udes.backend.enums.ErrorCode;
+import co.edu.udes.backend.exceptions.CustomException;
 import co.edu.udes.backend.mappers.material.MaterialMapper;
 import co.edu.udes.backend.models.Material;
 
@@ -32,7 +34,7 @@ public class MaterialService {
 
     public MaterialResponseDTO getOne(long id){
         Material material = materialRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("NO EXISTE EL MATERIAL CON ESE ID" + id));
+                .orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_MATERIAL));
 
         return materialMapper.toResponseDTO(material);
     }
@@ -40,18 +42,18 @@ public class MaterialService {
     public MaterialResponseDTO createMaterial(MaterialDTO materialDTO) {
 
         if (materialDTO.getCode() == null || materialDTO.getCode().trim().isEmpty()) {
-            throw new IllegalArgumentException("El código de material no puede ser nulo o vacío");
+            throw new CustomException(ErrorCode.CODE_IS_NULL);
         }
 
         if (materialRepository.existsByCode(materialDTO.getCode())) {
-            throw new RuntimeException("Ya existe el material");
+            throw new CustomException(ErrorCode.MATERIAL_EXISTS);
         }
 
         Material material = materialMapper.toEntity(materialDTO);
 
         // Double check after mapping
         if (material.getCode() == null || material.getCode().trim().isEmpty()) {
-            throw new IllegalArgumentException("Error en el mapeo: El código de material se convirtió a nulo");
+            throw new CustomException(ErrorCode.CODE_CONVERTD_IN_NULL);
         }
 
         Material materialSave = materialRepository.save(material);
@@ -61,11 +63,11 @@ public class MaterialService {
     public MaterialResponseDTO modifyMaterial(long id, MaterialDTO materialDTO) {
 
         Material existingMaterial = materialRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No existe el material con ese ID"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_MATERIAL));
 
 
         if (materialDTO.getCode() != null && materialDTO.getCode().equals(existingMaterial.getCode())) {
-            throw new IllegalArgumentException("El código nuevo no puede ser igual al código actual");
+            throw new CustomException(ErrorCode.CODE_IS_SAME);
         }
 
 
@@ -84,7 +86,7 @@ public class MaterialService {
 
     public void deleteMaterial(long id){
         materialRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("No existe el material con ese ID"));
+                .orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_MATERIAL));
 
         materialRepository.deleteById(id);
     }

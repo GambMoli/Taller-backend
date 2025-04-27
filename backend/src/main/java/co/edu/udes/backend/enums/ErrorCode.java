@@ -33,7 +33,24 @@ public enum ErrorCode {
     GROUP_SCHEDULE_CONFLICT("El grupo ya tiene un horario asignado a la misma hora, o durante esa hora."),
     STUDENT_NOT_ENROLLED("El estudiante no esta matriculado en ese grupo."),
     NOT_CREATED_EVALUATION("La evaluacion no pudo ser creada."),
-    EXIST_RESERVE("");
+    NOT_FOUND_MATERIAL("No existe material con ese ID"),
+    CODE_IS_NULL("El código de material no puede ser nulo o vacío "),
+    MATERIAL_EXISTS("Ya existe el material"),
+    CODE_CONVERTD_IN_NULL("El código de material se convirtió a nulo"),
+    CODE_IS_SAME("El código nuevo no puede ser igual al código actual"),
+    PLACE_NOT_FOUND("No se encontro el lugar"),
+    PLACE_NAME("Ya existe un espacio con ese nombre"),
+    PLACE_EXISTS("El sitio no existe"),
+    RESERVE_NOT_FOUND("La reserva no fue encontrada"),
+    RESERVECODE_EXISTS("El codigo de la reserva ya existe"),
+    DATE_OF_RESERVE("La fecha de la reserva no puede ser nula."),
+    RESERVE_EXISTS("Ya existe una reserva para ese lugar, hora y fecha."),
+    MAINTENANCE_NOT_EXISTS("No existe ese mantenimiento"),
+    LOAN_EXISTS("Ya existe un préstamo con ese código"),
+    LOAN_NOT_FOUND("#EL PRESTAMO NO EXISTE"),
+    LOAN_CODE_IS_NULL("El código de préstamo no puede ser nulo o vacío"),
+    LOAN_CODE_IS_SAME("El código nuevo no puede ser igual al código actual");
+
     private final String message;
 
     ErrorCode(String message) {
