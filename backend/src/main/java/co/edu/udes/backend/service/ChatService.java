@@ -2,6 +2,8 @@ package co.edu.udes.backend.service;
 
 import co.edu.udes.backend.dto.chat.ChatDTO;
 import co.edu.udes.backend.dto.chat.ChatRequestDTO;
+import co.edu.udes.backend.enums.ErrorCode;
+import co.edu.udes.backend.exceptions.CustomException;
 import co.edu.udes.backend.models.Chat;
 import co.edu.udes.backend.models.Student;
 import co.edu.udes.backend.repositories.ChatRepository;
@@ -24,10 +26,10 @@ public class ChatService {
     @Transactional
     public ChatDTO createChat(ChatRequestDTO chatRequest) {
         Student participant1 = studentRepository.findById(chatRequest.getParticipant1Id())
-                .orElseThrow(() -> new RuntimeException("Estudiante 1 no encontrado"));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         Student participant2 = studentRepository.findById(chatRequest.getParticipant2Id())
-                .orElseThrow(() -> new RuntimeException("Estudiante 2 no encontrado"));
+                .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
 
         Chat chat = new Chat();
         chat.setParticipant1(participant1);
@@ -46,7 +48,7 @@ public class ChatService {
 
     public ChatDTO getChatById(Long chatId) {
         Chat chat = chatRepository.findById(chatId)
-                .orElseThrow(() -> new RuntimeException("Chat no encontrado"));
+                .orElseThrow(() -> new CustomException(ErrorCode.CHAT_NOT_FOUND));
         return convertToDTO(chat);
     }
 

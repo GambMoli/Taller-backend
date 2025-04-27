@@ -11,6 +11,7 @@ import co.edu.udes.backend.models.*;
 import co.edu.udes.backend.repositories.GroupClassRepository;
 import co.edu.udes.backend.repositories.ReserveRepository;
 import co.edu.udes.backend.repositories.TeacherRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,12 +35,18 @@ public class TeacherService {
         this.reserveRepository=reserveRepository;
     }
 
+    @Autowired
+    private RoleService roleService;
+
     public TeacherResponseDTO create(TeacherDTO teacherDTO) {
         if (teacherRepository.existsByEmail(teacherDTO.getEmail())) {
             throw new CustomException(ErrorCode.TEACHER_ALREADY_EXISTS);
         }
 
         Teacher teacher = teacherMapper.toEntity(teacherDTO);
+
+
+        teacher.setRole(roleService.getRoleByName(RoleService.ROLE_TEACHER));
 
         Teacher savedTeacher = teacherRepository.save(teacher);
         return teacherMapper.toResponseDto(savedTeacher);

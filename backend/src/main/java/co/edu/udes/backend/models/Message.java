@@ -27,13 +27,27 @@ public class Message {
     private Student sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_id", nullable = false)
+    @JoinColumn(name = "chat_id")
     private Chat chat;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "forum_id")
+    private Forum forum;
 
     @PrePersist
     public void prePersist() {
         if (this.date == null) {
             this.date = LocalDateTime.now();
         }
+    }
+
+    @Transient
+    public boolean isForChat() {
+        return chat != null;
+    }
+
+    @Transient
+    public boolean isForForum() {
+        return forum != null;
     }
 }

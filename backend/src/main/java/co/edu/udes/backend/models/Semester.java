@@ -17,7 +17,7 @@ public class Semester {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer number;
+    private Integer number; // 1, 2, 3... según el semestre
     private LocalDate startDate;
     private LocalDate endDate;
 
@@ -27,17 +27,8 @@ public class Semester {
     private Career career;
 
     @OneToMany(mappedBy = "semester", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Subject> subjects;
+    private List<Subject> subjects = new ArrayList<>();
 
     @OneToMany(mappedBy = "semester", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Period> periods = new ArrayList<>();
-
-    public void initializeDefaultPeriods() {
-        for (int i = 1; i <= 3; i++) {
-            Period period = new Period();
-            period.setName("Corte " + i);
-            period.setSemester(this);
-            periods.add(period);
-        }
-    }
 }
