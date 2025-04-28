@@ -55,22 +55,18 @@ public class SubjectService {
     }
 
     public Subject create(Subject subject, Long semesterId) {
-        // Verificar si ya existe una materia con el mismo nombre
+
         if (subjectRepository.existsByName(subject.getName())) {
             throw new CustomException(ErrorCode.SUBJECT_ALREADY_EXISTS);
         }
 
-        // Asignar semestre si se proporciona
         if (semesterId != null) {
             Semester semester = semesterRepository.findById(semesterId)
                     .orElseThrow(() -> new CustomException(ErrorCode.SEMESTER_NOT_FOUND));
             subject.setSemester(semester);
-
-            // Validar prerrequisitos basados en el semestre
             validatePrerequisites(subject, semester);
         }
 
-        // Verificar si los prerrequisitos existen
         if (subject.getPrerequisites() != null && !subject.getPrerequisites().isEmpty()) {
             subject.getPrerequisites().forEach(prerequisite -> {
                 if (!subjectRepository.existsById(prerequisite.getId())) {

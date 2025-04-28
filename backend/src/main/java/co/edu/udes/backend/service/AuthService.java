@@ -35,32 +35,57 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     public Optional<JwtResponseDTO> login(LoginRequestDTO loginRequest) {
-
+        System.out.println("Intentando login para: " + loginRequest.getEmail());
         Optional<Teacher> teacherOpt = teacherRepository.findByEmail(loginRequest.getEmail());
+        System.out.println("¿Es profesor? " + teacherOpt.isPresent());
+
         if (teacherOpt.isPresent()) {
             Teacher teacher = teacherOpt.get();
+            System.out.println("Contraseña almacenada: " + teacher.getPassword());
+            System.out.println("Contraseña recibida: " + loginRequest.getPassword());
+
+
             if (loginRequest.getPassword().equals(teacher.getPassword())) {
+                if (teacher.getRole() == null) {
+                    System.out.println("Rol de profesor es null");
+                    throw new CustomException(ErrorCode.ROLE_NOT_FOUND);
+                }
+
                 String token = jwtUtils.generateJwtToken(
                         teacher.getEmail(),
                         teacher.getRole().getName(),
                         teacher.getId());
                 return Optional.of(authMapper.teacherToJwtResponseDTO(teacher, token));
+            } else {
+                System.out.println("Contraseña de profesor incorrecta");
             }
         }
-
         Optional<Student> studentOpt = studentRepository.findByEmail(loginRequest.getEmail());
+        System.out.println("¿Es estudiante? " + studentOpt.isPresent());
+
         if (studentOpt.isPresent()) {
             Student student = studentOpt.get();
+            System.out.println("Contraseña almacenada: " + student.getPassword());
+            System.out.println("Contraseña recibida: " + loginRequest.getPassword());
+
+            // Comparar contraseñas directamente
             if (loginRequest.getPassword().equals(student.getPassword())) {
+                // Verificar si el rol es null
+                if (student.getRole() == null) {
+                    System.out.println("Rol de estudiante es null");
+                    throw new CustomException( ErrorCode.ROLE_NOT_FOUND);
+                }
+
                 String token = jwtUtils.generateJwtToken(
                         student.getEmail(),
                         student.getRole().getName(),
                         student.getId());
                 return Optional.of(authMapper.studentToJwtResponseDTO(student, token));
+            } else {
+                System.out.println("Contraseña de estudiante incorrecta");
             }
         }
-
-
-        return Optional.empty();
+        System.out.println("Usuario no encontrado o contraseña incorrecta");
+        throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
     }
 }
