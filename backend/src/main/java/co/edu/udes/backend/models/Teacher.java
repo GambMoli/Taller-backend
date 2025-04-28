@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -24,9 +25,16 @@ public class Teacher {
     @Column(nullable = false)
     private String password;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
     @Column(nullable = false)
     private Integer workloadHours;
 
     @OneToMany(mappedBy = "teacher")
     private Set<GroupClass> assignedGroups = new HashSet<>();
+
+    @OneToMany(mappedBy = "teacher")
+    private List<Reserve> reserve;
 }

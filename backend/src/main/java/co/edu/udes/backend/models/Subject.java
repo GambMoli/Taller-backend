@@ -18,6 +18,9 @@ public class Subject {
 
     private String name;
 
+
+    private Integer credits;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "semester_id")
     @JsonIgnore
@@ -42,5 +45,4 @@ public class Subject {
     @OneToMany
     @JoinColumn(name = "evaluation_id")
     private List<Evaluation> evaluation;
-
 }
