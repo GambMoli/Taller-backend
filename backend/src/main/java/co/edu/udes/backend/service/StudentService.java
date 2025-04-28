@@ -3,6 +3,7 @@ package co.edu.udes.backend.service;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
 import co.edu.udes.backend.dto.period.PeriodResponseDTO;
 import co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO;
@@ -13,9 +14,14 @@ import co.edu.udes.backend.dto.subject.SubjectGradeDTO;
 import co.edu.udes.backend.dto.subject.SubjectStatusDTO;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.reserve.ReserveMapper;
 import co.edu.udes.backend.mappers.period.PeriodMapper;
 import co.edu.udes.backend.mappers.student.StudentMapper;
 import co.edu.udes.backend.models.*;
+import co.edu.udes.backend.repositories.CareerRepository;
+import co.edu.udes.backend.repositories.GroupClassRepository;
+import co.edu.udes.backend.repositories.ReserveRepository;
+import co.edu.udes.backend.repositories.StudentRepository;
 import co.edu.udes.backend.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,18 +42,27 @@ public class StudentService {
     private final PeriodRepository periodRepository;
     @Autowired
     private RoleService roleService;
+    private final ReserveRepository reserveRepository;
+    private final ReserveMapper reserveMapper;
 
-    public StudentService(StudentRepository studentRepository,
-                          CareerRepository careerRepository,
-                          GroupClassRepository groupClassRepository,
-                          StudentMapper studentMapper,
-                          PeriodMapper periodMapper,
-                          SemesterRepository semesterRepository,
-                          PeriodRepository periodRepository) {
+    @Autowired
+    public StudentService(
+            StudentRepository studentRepository,
+            CareerRepository careerRepository,
+            GroupClassRepository groupClassRepository,
+            StudentMapper studentMapper,
+            ReserveRepository reserveRepository,
+            ReserveMapper reserveMapper,
+            PeriodMapper periodMapper,
+            SemesterRepository semesterRepository,
+            PeriodRepository periodRepository
+    ) {
         this.studentRepository = studentRepository;
         this.careerRepository = careerRepository;
         this.groupClassRepository = groupClassRepository;
         this.studentMapper = studentMapper;
+        this.reserveRepository = reserveRepository;
+        this.reserveMapper = reserveMapper;
         this.periodMapper = periodMapper;
         this.semesterRepository = semesterRepository;
         this.periodRepository = periodRepository;
@@ -318,6 +333,17 @@ public class StudentService {
 
         return StudentResponseDTO.fromEntity(updatedStudent);
     }
+
+    public List<ReserveResponseDTO> getReservesByStudent(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+
+        List<Reserve> reserves = reserveRepository.findByStudent(student);
+        return reserves.stream()
+                .map(reserveMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
 
     @Transactional
     public void initializeStudentPeriods(InitializePeriodsDTO initializeDTO) {

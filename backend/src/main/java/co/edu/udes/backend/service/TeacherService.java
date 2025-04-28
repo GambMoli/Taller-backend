@@ -1,14 +1,15 @@
 package co.edu.udes.backend.service;
 
+import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
 import co.edu.udes.backend.dto.teacher.*;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.reserve.ReserveMapper;
 import co.edu.udes.backend.mappers.teacher.TeacherMapper;
-import co.edu.udes.backend.models.GroupClass;
-import co.edu.udes.backend.models.Schedule;
-import co.edu.udes.backend.models.Teacher;
+import co.edu.udes.backend.models.*;
 import co.edu.udes.backend.repositories.GroupClassRepository;
+import co.edu.udes.backend.repositories.ReserveRepository;
 import co.edu.udes.backend.repositories.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,11 +24,15 @@ public class TeacherService {
     private final TeacherRepository teacherRepository;
     private final GroupClassRepository groupClassRepository;
     private final TeacherMapper teacherMapper;
+    private final ReserveRepository reserveRepository;
+    private final ReserveMapper reserveMapper;
 
-    public TeacherService(TeacherRepository teacherRepository, GroupClassRepository groupClassRepository, TeacherMapper teacherMapper) {
+    public TeacherService(TeacherRepository teacherRepository, GroupClassRepository groupClassRepository, TeacherMapper teacherMapper, ReserveRepository reserveRepository, ReserveMapper reserveMapper) {
         this.teacherRepository = teacherRepository;
         this.groupClassRepository = groupClassRepository;
         this.teacherMapper = teacherMapper;
+        this.reserveMapper= reserveMapper;
+        this.reserveRepository=reserveRepository;
     }
 
     @Autowired
@@ -191,5 +196,14 @@ public class TeacherService {
 
         scheduleDTO.setSchedules(schedules);
         return scheduleDTO;
+    }
+    public List<ReserveResponseDTO> getReservesByTeacher(Long teacherId) {
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+
+        List<Reserve> reserves = reserveRepository.findByTeacher(teacher);
+        return reserves.stream()
+                .map(reserveMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 }

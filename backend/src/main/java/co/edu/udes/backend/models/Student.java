@@ -1,7 +1,10 @@
 package co.edu.udes.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,6 +45,9 @@ public class Student {
             inverseJoinColumns = @JoinColumn(name = "group_id")
     )
     private Set<GroupClass> enrolledGroups = new HashSet<>();
+
+    @OneToMany(mappedBy = "student")
+    private List<Reserve> reserve;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Period> periods = new ArrayList<>();

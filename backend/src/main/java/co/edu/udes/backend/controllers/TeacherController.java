@@ -1,5 +1,6 @@
 package co.edu.udes.backend.controllers;
 
+import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.teacher.*;
 import co.edu.udes.backend.service.TeacherService;
 import org.springframework.http.HttpStatus;
@@ -51,5 +52,9 @@ public class TeacherController {
     @GetMapping("/{id}/schedule")
     public ResponseEntity<TeacherScheduleDTO> getSchedule(@PathVariable Long id) {
         return ResponseEntity.ok(teacherService.getSchedule(id));
+    }
+    @GetMapping("/{id}/my_reserve")
+    public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable long Id){
+        return ResponseEntity.ok(teacherService.getReservesByTeacher(Id));
     }
 }
