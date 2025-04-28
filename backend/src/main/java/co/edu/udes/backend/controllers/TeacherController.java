@@ -53,8 +53,8 @@ public class TeacherController {
     public ResponseEntity<TeacherScheduleDTO> getSchedule(@PathVariable Long id) {
         return ResponseEntity.ok(teacherService.getSchedule(id));
     }
-    @GetMapping("/{id}/my_reserve")
-    public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable long Id){
-        return ResponseEntity.ok(teacherService.getReservesByTeacher(Id));
+    @GetMapping("/{teacherId}/my_reserve")
+    public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable long teacherId){
+        return ResponseEntity.ok(teacherService.getReservesByTeacher(teacherId));
     }
 }
