@@ -15,11 +15,13 @@ public interface PeriodRepository extends JpaRepository<Period, Long> {
 
     void deleteBySemesterId(Long semesterId);
 
-    Arrays findByStudentIdOrderByStartDateAsc(Long studentId);
+//    Arrays findByStudentIdOrderByStartDateAsc(Long studentId);
 
     boolean existsByNameAndStudentId(String name, Long studentId);
 
     void deleteByStudentId(Long studentId);
 
     boolean existsByStudentIdAndSemesterId(Long studentId, Long semesterId);
+
+    List<Period> findByStudentIdOrderByStartDateAsc(Long studentId);
 }

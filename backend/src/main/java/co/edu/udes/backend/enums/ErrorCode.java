@@ -75,7 +75,11 @@ public enum ErrorCode {
     LOAN_NOT_FOUND("#EL PRESTAMO NO EXISTE"),
     LOAN_CODE_IS_NULL("El código de préstamo no puede ser nulo o vacío"),
     LOAN_CODE_IS_SAME("El código nuevo no puede ser igual al código actual"),
-    USER_NOT_FOUND("El usuario no existe");
+    USER_NOT_FOUND("El usuario no existe"),
+    NO_PERIODS_FOUND("Periodos no encontrados"),
+    INVALID_PERIOD_COUNT("Cuenta de periodo invalida"),
+    NO_GRADES_FOUND_FOR_SUBJECT("No hay notas para esa materia"),
+    INCOMPLETE_PERIODS_FOR_SUBJECT("Periodos incompletos.");
 
     private final String message;
 

@@ -8,6 +8,7 @@ import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
 import co.edu.udes.backend.dto.period.PeriodResponseDTO;
 import co.edu.udes.backend.dto.period.PeriodWithSubjectsDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
+import co.edu.udes.backend.dto.schedule.DayScheduleDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
 import co.edu.udes.backend.dto.student.*;
 import co.edu.udes.backend.dto.subject.SubjectGradeDTO;
@@ -284,14 +285,27 @@ public class StudentService {
             throw new CustomException(ErrorCode.NO_ENROLLED_GROUPS);
         }
 
+        // Crear el DTO principal
         ScheduleStudentDTO scheduleDTO = new ScheduleStudentDTO();
         scheduleDTO.setStudentId(student.getId());
         scheduleDTO.setStudentName(student.getName());
 
-        List<ClassScheduleDTO> schedules = new ArrayList<>();
+        // Crear un array para los 7 días de la semana (0=Lunes, 1=Martes, ..., 6=Domingo)
+        List<DayScheduleDTO> weekSchedule = new ArrayList<>();
 
+        // Inicializar los días de la semana
+        String[] dayNames = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
+        for (int i = 0; i < dayNames.length; i++) {
+            DayScheduleDTO daySchedule = new DayScheduleDTO();
+            daySchedule.setDayName(dayNames[i]);
+            daySchedule.setClasses(new ArrayList<>());
+            weekSchedule.add(daySchedule);
+        }
+
+        // Recorrer los grupos y horarios del estudiante
         for (GroupClass group : student.getEnrolledGroups()) {
             for (Schedule schedule : group.getSchedules()) {
+                // Crear el DTO para cada clase
                 ClassScheduleDTO classSchedule = new ClassScheduleDTO(
                         group.getId(),
                         group.getSubject().getName(),
@@ -300,12 +314,34 @@ public class StudentService {
                         schedule.getEndTime(),
                         schedule.getClassroom()
                 );
-                schedules.add(classSchedule);
+
+                // Determinar el índice del día según su nombre
+                int dayIndex = getDayIndex(schedule.getDay());
+
+                // Si el día es válido, agregar la clase al día correspondiente
+                if (dayIndex >= 0 && dayIndex < weekSchedule.size()) {
+                    weekSchedule.get(dayIndex).getClasses().add(classSchedule);
+                }
             }
         }
 
-        scheduleDTO.setSchedules(schedules);
+        scheduleDTO.setWeekSchedule(weekSchedule);
         return scheduleDTO;
+    }
+
+    private int getDayIndex(String dayName) {
+        switch (dayName.toLowerCase()) {
+            case "lunes": return 0;
+            case "martes": return 1;
+            case "miércoles":
+            case "miercoles": return 2;
+            case "jueves": return 3;
+            case "viernes": return 4;
+            case "sábado":
+            case "sabado": return 5;
+            case "domingo": return 6;
+            default: return -1; // Día inválido
+        }
     }
 
     @Transactional

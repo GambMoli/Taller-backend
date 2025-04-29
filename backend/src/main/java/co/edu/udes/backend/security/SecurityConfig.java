@@ -38,8 +38,6 @@ public class SecurityConfig {
                         // Otras rutas requieren autenticación
                         .anyRequest().authenticated()
                 );
-
-
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

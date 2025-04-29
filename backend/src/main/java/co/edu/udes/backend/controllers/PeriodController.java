@@ -4,6 +4,7 @@ import co.edu.udes.backend.dto.grade.AssignGradeDTO;
 import co.edu.udes.backend.dto.period.PeriodCreateDTO;
 import co.edu.udes.backend.dto.period.PeriodResponseDTO;
 import co.edu.udes.backend.dto.period.PeriodUpdateDTO;
+import co.edu.udes.backend.dto.subject.SubjectFinalGradeDTO;
 import co.edu.udes.backend.service.PeriodService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,45 +22,57 @@ public class PeriodController {
     }
 
     @PostMapping
-    public ResponseEntity<PeriodResponseDTO> createPeriod(@RequestBody PeriodCreateDTO dto) {
+    public ResponseEntity<PeriodResponseDTO> create(@RequestBody PeriodCreateDTO dto) {
         return new ResponseEntity<>(periodService.create(dto), HttpStatus.CREATED);
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<PeriodResponseDTO> getPeriod(@PathVariable Long id) {
+    public ResponseEntity<PeriodResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(periodService.getById(id));
     }
 
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<List<PeriodResponseDTO>> getAllByStudentId(@PathVariable Long studentId) {
+        return ResponseEntity.ok(periodService.getAllByStudentId(studentId));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<PeriodResponseDTO> updatePeriod(
-            @PathVariable Long id,
-            @RequestBody PeriodUpdateDTO dto) {
+    public ResponseEntity<PeriodResponseDTO> update(@PathVariable Long id,@RequestBody PeriodUpdateDTO dto) {
         return ResponseEntity.ok(periodService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePeriod(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         periodService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/student/{studentId}/generate")
-    public ResponseEntity<Void> generatePeriodsForStudent(@PathVariable Long studentId) {
-        periodService.generatePeriodsForStudent(studentId);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/grades")
-    public ResponseEntity<PeriodResponseDTO> assignGrade(@RequestBody AssignGradeDTO dto) {
-        PeriodResponseDTO response = periodService.assignGrade(dto);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{periodId}/calculate-final")
+    @PostMapping("/calculate-final/{periodId}")
     public ResponseEntity<Void> calculateFinalGrades(@PathVariable Long periodId) {
         periodService.calculateFinalGrades(periodId);
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/generate-periods/{studentId}")
+    public ResponseEntity<Void> generatePeriodsForStudent(@PathVariable Long studentId) {
+        periodService.generatePeriodsForStudent(studentId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/assign-grade")
+    public ResponseEntity<PeriodResponseDTO> assignGrade( @RequestBody AssignGradeDTO dto) {
+        return ResponseEntity.ok(periodService.assignGrade(dto));
+    }
+
+    @GetMapping("/calculate-subject-final/{studentId}/{subjectId}")
+    public ResponseEntity<List<SubjectFinalGradeDTO>> calculateFinalSubjectGrades(
+            @PathVariable Long studentId,
+            @PathVariable Long subjectId) {
+        return ResponseEntity.ok(periodService.calculateFinalSubjectGrades(studentId, subjectId));
+    }
+
+    @GetMapping("/calculate-all-subject-finals/{studentId}")
+    public ResponseEntity<List<SubjectFinalGradeDTO>> calculateAllFinalSubjectGrades(@PathVariable Long studentId) {
+        return ResponseEntity.ok(periodService.calculateAllFinalSubjectGrades(studentId));
+    }
 }
