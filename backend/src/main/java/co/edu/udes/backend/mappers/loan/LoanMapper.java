@@ -9,7 +9,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface LoanMapper {
 
-
     @Mapping(target = "material.id", source = "materialId")
     @Mapping(target = "teacher.id", source = "teacherId")
     @Mapping(target = "student.id", source = "studentId")
