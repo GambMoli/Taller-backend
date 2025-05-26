@@ -19,12 +19,13 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReserveResponseDTO {
+    private Long id;
     private String code;
     private LocalDate reserveDate;
     private LocalTime hourInit;
     private LocalTime hourFinish;
     private String state;
-    private Place place;
-    private Teacher teacher;
-    private Student student;
+    private PlaceDTO place;
+    private TeacherDTO teacher;
+    private StudentDTO student;
 }
