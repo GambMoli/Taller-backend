@@ -232,6 +232,7 @@ public class TeacherService {
                 .collect(Collectors.toList());
     }
 
+
     private int getDayIndex(String dayName) {
         switch (dayName.toLowerCase()) {
             case "lunes": return 0;
