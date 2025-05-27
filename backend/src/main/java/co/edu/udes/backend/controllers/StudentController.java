@@ -3,6 +3,9 @@ package co.edu.udes.backend.controllers;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.loan.LoanResponseDTO;
+import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
+import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleStudentDTO;
 import co.edu.udes.backend.dto.student.*;
@@ -74,5 +77,29 @@ public class StudentController {
         return ResponseEntity.ok(studentService.cancelGroupEnrollment(
                 enrollmentDTO.getStudentId(),
                 enrollmentDTO.getGroupId()));
+    }
+
+    @PostMapping("/periods/initialize")
+    public ResponseEntity<Void> initializeStudentPeriods(@RequestBody InitializePeriodsDTO initializeDTO) {
+        studentService.initializeStudentPeriods(initializeDTO);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{studentId}/periods")
+    public ResponseEntity<List<StudentSemesterPeriodsDTO>> getStudentPeriods(@PathVariable Long studentId) {
+        List<StudentSemesterPeriodsDTO> periods = studentService.getStudentPeriods(studentId);
+        return ResponseEntity.ok(periods);
+    }
+
+
+    @GetMapping("/{studentId}/my_reserve")
+    public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable Long studentId){
+        return ResponseEntity.ok(studentService.getReservesByStudent(studentId));
+    }
+
+
+    @GetMapping("/{studentId}/my_loans")
+    public ResponseEntity<List<LoanResponseDTO>>getLoans(@PathVariable("studentId") long studentId){
+        return ResponseEntity.ok(studentService.getLoansByStudent(studentId));
     }
 }

@@ -1,6 +1,7 @@
 package co.edu.udes.backend.dto.teacher;
 
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
+import co.edu.udes.backend.dto.schedule.DayScheduleDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,8 +14,7 @@ import java.util.List;
 public class TeacherScheduleDTO {
     private Long teacherId;
     private String teacherName;
-    private Integer workloadHours;
-    private Integer assignedHours;
-    private Integer availableHours;
-    private List<ClassScheduleDTO> schedules;
+    private String teacherEmail;
+    private int assignedHours;
+    private List<DayScheduleDTO> weekSchedule; // Array de días, donde cada posición es un día
 }

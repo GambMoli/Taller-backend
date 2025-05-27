@@ -1,20 +1,30 @@
 package co.edu.udes.backend.service;
 
+import co.edu.udes.backend.dto.groups.GroupClassResponseDTO;
+import co.edu.udes.backend.dto.loan.LoanResponseDTO;
+import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
+import co.edu.udes.backend.dto.schedule.DayScheduleDTO;
+import co.edu.udes.backend.dto.schedule.ScheduleResponseDTO;
+import co.edu.udes.backend.dto.student.StudentResponseDTO;
 import co.edu.udes.backend.dto.teacher.*;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.loan.LoanMapper;
+import co.edu.udes.backend.mappers.reserve.ReserveMapper;
 import co.edu.udes.backend.mappers.teacher.TeacherMapper;
-import co.edu.udes.backend.models.GroupClass;
-import co.edu.udes.backend.models.Schedule;
-import co.edu.udes.backend.models.Teacher;
+import co.edu.udes.backend.models.*;
 import co.edu.udes.backend.repositories.GroupClassRepository;
+import co.edu.udes.backend.repositories.LoanRepository;
+import co.edu.udes.backend.repositories.ReserveRepository;
 import co.edu.udes.backend.repositories.TeacherRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,12 +32,23 @@ public class TeacherService {
     private final TeacherRepository teacherRepository;
     private final GroupClassRepository groupClassRepository;
     private final TeacherMapper teacherMapper;
+    private final ReserveRepository reserveRepository;
+    private final ReserveMapper reserveMapper;
+    private final LoanRepository loanRepository;
+    private final LoanMapper loanMapper;
 
-    public TeacherService(TeacherRepository teacherRepository, GroupClassRepository groupClassRepository, TeacherMapper teacherMapper) {
+    public TeacherService(LoanMapper loanMapper,LoanRepository loanRepository,TeacherRepository teacherRepository, GroupClassRepository groupClassRepository, TeacherMapper teacherMapper, ReserveRepository reserveRepository, ReserveMapper reserveMapper) {
         this.teacherRepository = teacherRepository;
         this.groupClassRepository = groupClassRepository;
         this.teacherMapper = teacherMapper;
+        this.reserveMapper= reserveMapper;
+        this.reserveRepository=reserveRepository;
+        this.loanRepository= loanRepository;
+        this.loanMapper=loanMapper;
     }
+
+    @Autowired
+    private RoleService roleService;
 
     public TeacherResponseDTO create(TeacherDTO teacherDTO) {
         if (teacherRepository.existsByEmail(teacherDTO.getEmail())) {
@@ -35,6 +56,9 @@ public class TeacherService {
         }
 
         Teacher teacher = teacherMapper.toEntity(teacherDTO);
+
+
+        teacher.setRole(roleService.getRoleByName(RoleService.ROLE_TEACHER));
 
         Teacher savedTeacher = teacherRepository.save(teacher);
         return teacherMapper.toResponseDto(savedTeacher);
@@ -148,17 +172,31 @@ public class TeacherService {
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TEACHER_NOT_FOUND));
 
+        // Calcular horas asignadas totales
         int assignedHours = teacher.getAssignedGroups().stream()
                 .mapToInt(GroupClass::getTotalHours)
                 .sum();
 
-        TeacherScheduleDTO scheduleDTO = teacherMapper.toScheduleDto(teacher);
+        // Crear DTO básico del profesor
+        co.edu.udes.backend.dto.teacher.TeacherScheduleDTO scheduleDTO = teacherMapper.toScheduleDto(teacher);
+        scheduleDTO.setAssignedHours(assignedHours);
 
-        List<ClassScheduleDTO> schedules = new ArrayList<>();
+        // Crear un array para los 7 días de la semana (0=Lunes, 1=Martes, ..., 6=Domingo)
+        List<DayScheduleDTO> weekSchedule = new ArrayList<>();
 
+        // Inicializar los días de la semana
+        String[] dayNames = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
+        for (int i = 0; i < dayNames.length; i++) {
+            DayScheduleDTO daySchedule = new DayScheduleDTO();
+            daySchedule.setDayName(dayNames[i]);
+            daySchedule.setClasses(new ArrayList<>());
+            weekSchedule.add(daySchedule);
+        }
+
+        // Recorrer los grupos y horarios del profesor
         for (GroupClass group : teacher.getAssignedGroups()) {
             for (Schedule schedule : group.getSchedules()) {
-
+                // Calcular la duración de la clase en horas
                 String[] start = schedule.getStartTime().split(":");
                 String[] end = schedule.getEndTime().split(":");
 
@@ -170,6 +208,7 @@ public class TeacherService {
                 int durationMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
                 int hours = durationMinutes / 60;
 
+                // Crear el DTO para cada clase
                 ClassScheduleDTO classSchedule = new ClassScheduleDTO(
                         group.getId(),
                         group.getSubject().getName(),
@@ -178,11 +217,96 @@ public class TeacherService {
                         schedule.getEndTime(),
                         schedule.getClassroom()
                 );
-                schedules.add(classSchedule);
+
+                // Determinar el índice del día según su nombre
+                int dayIndex = getDayIndex(schedule.getDay());
+
+                // Si el día es válido, agregar la clase al día correspondiente
+                if (dayIndex >= 0 && dayIndex < weekSchedule.size()) {
+                    weekSchedule.get(dayIndex).getClasses().add(classSchedule);
+                }
             }
         }
 
-        scheduleDTO.setSchedules(schedules);
+        scheduleDTO.setWeekSchedule(weekSchedule);
         return scheduleDTO;
+    }
+    public List<ReserveResponseDTO> getReservesByTeacher(Long teacherId) {
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+
+        List<Reserve> reserves = reserveRepository.findByTeacher(teacher);
+        return reserves.stream()
+                .map(reserveMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private int getDayIndex(String dayName) {
+        switch (dayName.toLowerCase()) {
+            case "lunes": return 0;
+            case "martes": return 1;
+            case "miércoles":
+            case "miercoles": return 2;
+            case "jueves": return 3;
+            case "viernes": return 4;
+            case "sábado":
+            case "sabado": return 5;
+            case "domingo": return 6;
+            default: return -1; // Día inválido
+        }
+    }
+    public List<GroupClassResponseDTO> getGroupByTeacher(Long id) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
+
+        return teacher.getAssignedGroups().stream().map(groupClass -> {
+            GroupClassResponseDTO dto = new GroupClassResponseDTO();
+            dto.setId(groupClass.getId());
+            dto.setName(groupClass.getName());
+            dto.setCapacity(groupClass.getCapacity());
+
+            if (groupClass.getSubject() != null) {
+                dto.setSubjectId(groupClass.getSubject().getId());
+                dto.setSubjectName(groupClass.getSubject().getName());
+            }
+
+            dto.setEnrolledCount(groupClass.getStudents().size());
+
+            // ✅ Mapear estudiantes a DTO
+            Set<StudentResponseDTO> studentDTOs = groupClass.getStudents().stream().map(student -> {
+                StudentResponseDTO sDto = new StudentResponseDTO();
+                sDto.setId(student.getId());
+                sDto.setName(student.getName());
+                sDto.setCode(student.getCode());
+                sDto.setEmail(student.getEmail());
+                sDto.setCareerId(student.getCareer().getId());
+                sDto.setCareerName(student.getCareer().getName());
+                return sDto;
+            }).collect(Collectors.toSet());
+            dto.setStudents(studentDTOs);
+
+            // ✅ Mapear horarios a DTO
+            Set<ScheduleResponseDTO> scheduleDTOs = groupClass.getSchedules().stream().map(schedule -> {
+                ScheduleResponseDTO schDto = new ScheduleResponseDTO();
+                schDto.setId(schedule.getId());
+                schDto.setDay(schedule.getDay());
+                schDto.setStartTime(schedule.getStartTime());
+                schDto.setEndTime(schedule.getEndTime());
+                schDto.setClassroom(schedule.getClassroom());
+                return schDto;
+            }).collect(Collectors.toSet());
+            dto.setSchedules(scheduleDTOs);
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+    public List<LoanResponseDTO> getLoansByTeacher(Long teacherId) {
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+
+        List<Loan> Loans = loanRepository.findByTeacher(teacher);
+        return Loans.stream()
+                .map(loanMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 }
