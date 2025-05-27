@@ -156,7 +156,6 @@ public class TeacherService {
         return teacherMapper.toResponseDto(updatedTeacher);
     }
 
-
     @Transactional(readOnly = true)
     public TeacherScheduleDTO getSchedule(Long teacherId) {
         Teacher teacher = teacherRepository.findById(teacherId)
@@ -221,7 +220,6 @@ public class TeacherService {
         scheduleDTO.setWeekSchedule(weekSchedule);
         return scheduleDTO;
     }
-
     public List<ReserveResponseDTO> getReservesByTeacher(Long teacherId) {
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
@@ -231,7 +229,6 @@ public class TeacherService {
                 .map(reserveMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
-
 
     private int getDayIndex(String dayName) {
         switch (dayName.toLowerCase()) {
