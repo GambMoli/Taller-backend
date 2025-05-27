@@ -1,6 +1,7 @@
 package co.edu.udes.backend.controllers;
 
 import co.edu.udes.backend.dto.groups.GroupClassResponseDTO;
+import co.edu.udes.backend.dto.loan.LoanResponseDTO;
 import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.teacher.*;
 import co.edu.udes.backend.service.TeacherService;
@@ -64,4 +65,10 @@ public class TeacherController {
     public ResponseEntity<List<GroupClassResponseDTO>> getGroups(@PathVariable("teacherId") long teacherID) {
         return ResponseEntity.ok(teacherService.getGroupByTeacher(teacherID));
     }
+
+    @GetMapping("/{teacherId}/my_loans")
+    public ResponseEntity<List<LoanResponseDTO>>getLoans(@PathVariable("teacherId") long teacherId){
+        return ResponseEntity.ok(teacherService.getLoansByTeacher(teacherId));
+    }
+
 }

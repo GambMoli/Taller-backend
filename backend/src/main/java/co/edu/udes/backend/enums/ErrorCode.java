@@ -79,7 +79,8 @@ public enum ErrorCode {
     NO_PERIODS_FOUND("Periodos no encontrados"),
     INVALID_PERIOD_COUNT("Cuenta de periodo invalida"),
     NO_GRADES_FOUND_FOR_SUBJECT("No hay notas para esa materia"),
-    INCOMPLETE_PERIODS_FOR_SUBJECT("Periodos incompletos.");
+    INCOMPLETE_PERIODS_FOR_SUBJECT("Periodos incompletos."),
+    SAME_LOAN_DATE("TIENEN LA MISMA FECHA DE PRESTAMO");
 
     private final String message;
 

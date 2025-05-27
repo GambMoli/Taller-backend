@@ -3,6 +3,7 @@ package co.edu.udes.backend.service;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.loan.LoanResponseDTO;
 import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
 import co.edu.udes.backend.dto.period.PeriodResponseDTO;
@@ -15,6 +16,7 @@ import co.edu.udes.backend.dto.subject.SubjectGradeDTO;
 import co.edu.udes.backend.dto.subject.SubjectStatusDTO;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
+import co.edu.udes.backend.mappers.loan.LoanMapper;
 import co.edu.udes.backend.mappers.reserve.ReserveMapper;
 import co.edu.udes.backend.mappers.period.PeriodMapper;
 import co.edu.udes.backend.mappers.student.StudentMapper;
@@ -41,6 +43,8 @@ public class StudentService {
     private final PeriodMapper periodMapper;
     private final SemesterRepository semesterRepository;
     private final PeriodRepository periodRepository;
+    private final LoanRepository loanRepository;
+    private final LoanMapper loanMapper;
     @Autowired
     private RoleService roleService;
     private final ReserveRepository reserveRepository;
@@ -56,7 +60,9 @@ public class StudentService {
             ReserveMapper reserveMapper,
             PeriodMapper periodMapper,
             SemesterRepository semesterRepository,
-            PeriodRepository periodRepository
+            PeriodRepository periodRepository,
+            LoanRepository loanRepository,
+            LoanMapper loanMapper
     ) {
         this.studentRepository = studentRepository;
         this.careerRepository = careerRepository;
@@ -67,6 +73,9 @@ public class StudentService {
         this.periodMapper = periodMapper;
         this.semesterRepository = semesterRepository;
         this.periodRepository = periodRepository;
+        this.loanRepository=loanRepository;
+        this.loanMapper=loanMapper;
+
     }
 
     public StudentResponseDTO create(StudentDTO studentDTO) {
@@ -500,6 +509,15 @@ public class StudentService {
         }
 
         return result;
+    }
+    public List<LoanResponseDTO> getLoansByStudent(Long teacherId) {
+        Student student = studentRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+
+        List<Loan> Loans = loanRepository.findByStudent(student);
+        return Loans.stream()
+                .map(loanMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
 
