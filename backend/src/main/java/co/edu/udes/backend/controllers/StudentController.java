@@ -3,6 +3,7 @@ package co.edu.udes.backend.controllers;
 import co.edu.udes.backend.dto.academicRecord.AcademicRecordDTO;
 import co.edu.udes.backend.dto.enrollment.CareerEnrollmentDTO;
 import co.edu.udes.backend.dto.enrollment.EnrollmentDTO;
+import co.edu.udes.backend.dto.loan.LoanResponseDTO;
 import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.period.InitializePeriodsDTO;
 import co.edu.udes.backend.dto.schedule.ScheduleDTO;
@@ -94,5 +95,11 @@ public class StudentController {
     @GetMapping("/{studentId}/my_reserve")
     public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable Long studentId){
         return ResponseEntity.ok(studentService.getReservesByStudent(studentId));
+    }
+
+
+    @GetMapping("/{studentId}/my_loans")
+    public ResponseEntity<List<LoanResponseDTO>>getLoans(@PathVariable("studentId") long studentId){
+        return ResponseEntity.ok(studentService.getLoansByStudent(studentId));
     }
 }
