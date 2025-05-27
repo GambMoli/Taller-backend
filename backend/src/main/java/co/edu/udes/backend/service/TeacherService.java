@@ -32,8 +32,8 @@ public class TeacherService {
         this.teacherRepository = teacherRepository;
         this.groupClassRepository = groupClassRepository;
         this.teacherMapper = teacherMapper;
-        this.reserveMapper= reserveMapper;
-        this.reserveRepository=reserveRepository;
+        this.reserveMapper = reserveMapper;
+        this.reserveRepository = reserveRepository;
     }
 
     @Autowired
@@ -45,8 +45,6 @@ public class TeacherService {
         }
 
         Teacher teacher = teacherMapper.toEntity(teacherDTO);
-
-
         teacher.setRole(roleService.getRoleByName(RoleService.ROLE_TEACHER));
 
         Teacher savedTeacher = teacherRepository.save(teacher);
@@ -55,7 +53,7 @@ public class TeacherService {
 
     public List<TeacherResponseDTO> findAll() {
         return teacherRepository.findAll().stream()
-                .map(teacherMapper :: toResponseDto)
+                .map(teacherMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
@@ -117,13 +115,11 @@ public class TeacherService {
             throw new CustomException(ErrorCode.GROUP_ALREADY_ASSIGNED_TO_ANOTHER_TEACHER);
         }
 
-        // Obtener todos los horarios del profesor
         List<Schedule> teacherSchedules = new ArrayList<>();
         for (GroupClass assignedGroup : teacher.getAssignedGroups()) {
             teacherSchedules.addAll(assignedGroup.getSchedules());
         }
 
-        // Verificar choques de horario
         for (Schedule newSchedule : group.getSchedules()) {
             for (Schedule existing : teacherSchedules) {
                 if (newSchedule.getDay().equals(existing.getDay()) &&
@@ -134,7 +130,6 @@ public class TeacherService {
             }
         }
 
-        // Calcular carga horaria
         int currentAssignedHours = teacher.getAssignedGroups().stream()
                 .mapToInt(GroupClass::getTotalHours)
                 .sum();
@@ -156,37 +151,29 @@ public class TeacherService {
         return teacherMapper.toResponseDto(updatedTeacher);
     }
 
-
     @Transactional(readOnly = true)
     public TeacherScheduleDTO getSchedule(Long teacherId) {
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TEACHER_NOT_FOUND));
 
-        // Calcular horas asignadas totales
         int assignedHours = teacher.getAssignedGroups().stream()
                 .mapToInt(GroupClass::getTotalHours)
                 .sum();
 
-        // Crear DTO básico del profesor
-        co.edu.udes.backend.dto.teacher.TeacherScheduleDTO scheduleDTO = teacherMapper.toScheduleDto(teacher);
+        TeacherScheduleDTO scheduleDTO = teacherMapper.toScheduleDto(teacher);
         scheduleDTO.setAssignedHours(assignedHours);
 
-        // Crear un array para los 7 días de la semana (0=Lunes, 1=Martes, ..., 6=Domingo)
         List<DayScheduleDTO> weekSchedule = new ArrayList<>();
-
-        // Inicializar los días de la semana
         String[] dayNames = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
-        for (int i = 0; i < dayNames.length; i++) {
+        for (String dayName : dayNames) {
             DayScheduleDTO daySchedule = new DayScheduleDTO();
-            daySchedule.setDayName(dayNames[i]);
+            daySchedule.setDayName(dayName);
             daySchedule.setClasses(new ArrayList<>());
             weekSchedule.add(daySchedule);
         }
 
-        // Recorrer los grupos y horarios del profesor
         for (GroupClass group : teacher.getAssignedGroups()) {
             for (Schedule schedule : group.getSchedules()) {
-                // Calcular la duración de la clase en horas
                 String[] start = schedule.getStartTime().split(":");
                 String[] end = schedule.getEndTime().split(":");
 
@@ -198,7 +185,6 @@ public class TeacherService {
                 int durationMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
                 int hours = durationMinutes / 60;
 
-                // Crear el DTO para cada clase
                 ClassScheduleDTO classSchedule = new ClassScheduleDTO(
                         group.getId(),
                         group.getSubject().getName(),
@@ -208,10 +194,7 @@ public class TeacherService {
                         schedule.getClassroom()
                 );
 
-                // Determinar el índice del día según su nombre
                 int dayIndex = getDayIndex(schedule.getDay());
-
-                // Si el día es válido, agregar la clase al día correspondiente
                 if (dayIndex >= 0 && dayIndex < weekSchedule.size()) {
                     weekSchedule.get(dayIndex).getClasses().add(classSchedule);
                 }
@@ -243,7 +226,7 @@ public class TeacherService {
             case "sábado":
             case "sabado": return 5;
             case "domingo": return 6;
-            default: return -1; // Día inválido
+            default: return -1;
         }
     }
 }
