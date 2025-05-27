@@ -3,6 +3,7 @@ package co.edu.udes.backend.models;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,13 +30,13 @@ public class Loan {
     private Student student;
 
     @Column(name = "loan_date", nullable = true)
-    private LocalDateTime   loanDate;
+    private LocalDate  loanDate;
 
     @Column(name = "deadline", nullable = true)
-    private LocalDateTime   deadline;
+    private LocalDate  deadline;
 
     @Column(name = "actual_return_date" , nullable = true)
-    private LocalDateTime   actualReturnDate;
+    private LocalDate actualReturnDate;
 
     @Column(name = "return_state")
     private String returnState;

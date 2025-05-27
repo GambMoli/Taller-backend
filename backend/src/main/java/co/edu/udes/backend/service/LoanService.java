@@ -1,6 +1,7 @@
 package co.edu.udes.backend.service;
 
 import co.edu.udes.backend.dto.loan.LoanDTO;
+import co.edu.udes.backend.dto.loan.LoanDateDTO;
 import co.edu.udes.backend.dto.loan.LoanResponseDTO;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
@@ -16,6 +17,7 @@ import co.edu.udes.backend.repositories.StudentRepository;
 import co.edu.udes.backend.repositories.TeacherRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -86,11 +88,10 @@ public class LoanService {
 
 
         if (loanDTO.getLoanDate() == null) {
-            loan.setLoanDate(LocalDateTime.now());
+            loan.setLoanDate(LocalDate.now());
         } else {
             loan.setLoanDate(loanDTO.getLoanDate());
         }
-
 
         loan.setDeadline(loan.getLoanDate().plusDays(15));
 
@@ -107,60 +108,22 @@ public class LoanService {
     }
 
 
-    public LoanResponseDTO modifyLoan(long id, LoanDTO loanDTO) {
-
+    public LoanResponseDTO modifyLoan(long id, LoanDateDTO dto) {
         Loan existingLoan = loanRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.LOAN_NOT_FOUND));
 
-
-        if (loanDTO.getCode() != null && loanDTO.getCode().equals(existingLoan.getCode())) {
-            throw new CustomException(ErrorCode.LOAN_CODE_IS_SAME);
+        // Si la fecha es igual, lanza excepción o simplemente no actualiza
+        if (dto.getLoanDate() != null && dto.getLoanDate().equals(existingLoan.getLoanDate())) {
+            throw new CustomException(ErrorCode.SAME_LOAN_DATE); // O puedes simplemente retornar sin actualizar
         }
 
-
-        Material material = null;
-        if (loanDTO.getMaterialId() != null) {
-            material = materialRepository.findById(loanDTO.getMaterialId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_MATERIAL));
-        }
-
-        Teacher teacher = null;
-        if (loanDTO.getTeacherId() != null) {
-            teacher = teacherRepository.findById(loanDTO.getTeacherId())
-                    .orElseThrow(() -> new  CustomException(ErrorCode.TEACHER_NOT_FOUND));
-        }
-
-        Student student = null;
-        if (loanDTO.getStudentId() != null) {
-            student = studentRepository.findById(loanDTO.getStudentId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.STUDENT_NOT_FOUND));
-        }
-
-
-        existingLoan.setCode(loanDTO.getCode());
-
-        if (material != null) {
-            existingLoan.setMaterial(material);
-        }
-
-        if (teacher != null) {
-            existingLoan.setTeacher(teacher);
-        }
-
-        if (student != null) {
-            existingLoan.setStudent(student);
-        }
-
-        existingLoan.setLoanDate(loanDTO.getLoanDate());
-        existingLoan.setDeadline(loanDTO.getDeadline());
-        existingLoan.setActualReturnDate(loanDTO.getActualReturnDate());
-        existingLoan.setReturnState(loanDTO.getReturnState());
-        existingLoan.setStatus(loanDTO.getStatus());
+        existingLoan.setLoanDate(dto.getLoanDate());
 
         // Guardar y devolver
         Loan loanModified = loanRepository.save(existingLoan);
         return loanMapper.toResponseDTO(loanModified);
     }
+
 
     public void deleteLoan(long id){
          loanRepository.findById(id)

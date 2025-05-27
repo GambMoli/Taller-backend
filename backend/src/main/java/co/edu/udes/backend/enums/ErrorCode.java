@@ -74,7 +74,8 @@ public enum ErrorCode {
     LOAN_EXISTS("Ya existe un préstamo con ese código"),
     LOAN_NOT_FOUND("#EL PRESTAMO NO EXISTE"),
     LOAN_CODE_IS_NULL("El código de préstamo no puede ser nulo o vacío"),
-    LOAN_CODE_IS_SAME("El código nuevo no puede ser igual al código actual");
+    LOAN_CODE_IS_SAME("El código nuevo no puede ser igual al código actual"),
+    SAME_LOAN_DATE("TIENEN LA MISMA FECHA DE PRESTAMO");
 
     private final String message;
 

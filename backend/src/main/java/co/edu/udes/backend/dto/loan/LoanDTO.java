@@ -15,9 +15,9 @@ public class LoanDTO {
     private Long materialId;
     private Long teacherId;
     private Long studentId;
-    private LocalDateTime   loanDate;
-    private LocalDateTime   deadline;
-    private LocalDateTime   actualReturnDate;
+    private LocalDate   loanDate;
+    private LocalDate   deadline;
+    private LocalDate   actualReturnDate;
     private String returnState;
     private String status;
 
