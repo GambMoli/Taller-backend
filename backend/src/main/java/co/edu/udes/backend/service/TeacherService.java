@@ -1,8 +1,11 @@
 package co.edu.udes.backend.service;
 
+import co.edu.udes.backend.dto.groups.GroupClassResponseDTO;
 import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
 import co.edu.udes.backend.dto.schedule.ClassScheduleDTO;
 import co.edu.udes.backend.dto.schedule.DayScheduleDTO;
+import co.edu.udes.backend.dto.schedule.ScheduleResponseDTO;
+import co.edu.udes.backend.dto.student.StudentResponseDTO;
 import co.edu.udes.backend.dto.teacher.*;
 import co.edu.udes.backend.enums.ErrorCode;
 import co.edu.udes.backend.exceptions.CustomException;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -243,5 +247,51 @@ public class TeacherService {
             case "domingo": return 6;
             default: return -1; // Día inválido
         }
+    }
+
+    public List<GroupClassResponseDTO> getGroupByTeacher(Long id) {
+        Teacher teacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
+
+        return teacher.getAssignedGroups().stream().map(groupClass -> {
+            GroupClassResponseDTO dto = new GroupClassResponseDTO();
+            dto.setId(groupClass.getId());
+            dto.setName(groupClass.getName());
+            dto.setCapacity(groupClass.getCapacity());
+
+            if (groupClass.getSubject() != null) {
+                dto.setSubjectId(groupClass.getSubject().getId());
+                dto.setSubjectName(groupClass.getSubject().getName());
+            }
+
+            dto.setEnrolledCount(groupClass.getStudents().size());
+
+            // ✅ Mapear estudiantes a DTO
+            Set<StudentResponseDTO> studentDTOs = groupClass.getStudents().stream().map(student -> {
+                StudentResponseDTO sDto = new StudentResponseDTO();
+                sDto.setId(student.getId());
+                sDto.setName(student.getName());
+                sDto.setCode(student.getCode());
+                sDto.setEmail(student.getEmail());
+                sDto.setCareerId(student.getCareer().getId());
+                sDto.setCareerName(student.getCareer().getName());
+                return sDto;
+            }).collect(Collectors.toSet());
+            dto.setStudents(studentDTOs);
+
+            // ✅ Mapear horarios a DTO
+            Set<ScheduleResponseDTO> scheduleDTOs = groupClass.getSchedules().stream().map(schedule -> {
+                ScheduleResponseDTO schDto = new ScheduleResponseDTO();
+                schDto.setId(schedule.getId());
+                schDto.setDay(schedule.getDay());
+                schDto.setStartTime(schedule.getStartTime());
+                schDto.setEndTime(schedule.getEndTime());
+                schDto.setClassroom(schedule.getClassroom());
+                return schDto;
+            }).collect(Collectors.toSet());
+            dto.setSchedules(scheduleDTOs);
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 }
