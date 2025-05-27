@@ -91,8 +91,8 @@ public class StudentController {
     }
 
 
-    @GetMapping("/{id}/my_reserve")
-    public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable long Id){
-        return ResponseEntity.ok(studentService.getReservesByStudent(Id));
+    @GetMapping("/{studentId}/my_reserve")
+    public ResponseEntity<List<ReserveResponseDTO>>getReserve(@PathVariable Long studentId){
+        return ResponseEntity.ok(studentService.getReservesByStudent(studentId));
     }
 }

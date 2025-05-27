@@ -2,6 +2,7 @@ package co.edu.udes.backend.controllers;
 
 import co.edu.udes.backend.dto.reserve.ReserveDTO;
 import co.edu.udes.backend.dto.reserve.ReserveResponseDTO;
+import co.edu.udes.backend.dto.reserve.ReserveTimeUpdateDTO;
 import co.edu.udes.backend.service.ReserveService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,9 +37,10 @@ public class ReserveController {
     public ResponseEntity<ReserveResponseDTO> GetOneReserve(@PathVariable long id){
         return ResponseEntity.ok(reserveService.getOneReserve(id));
     }
-
-
-
+    @PutMapping("/{id}")
+    public ResponseEntity<ReserveResponseDTO>ModifyReserve(@PathVariable long id, @RequestBody ReserveTimeUpdateDTO reserveTimeUpdateDTO){
+        return ResponseEntity.ok(reserveService.updateReserveTime(id, reserveTimeUpdateDTO));
+    }
     @DeleteMapping("/{id}")
     public  ResponseEntity<ReserveResponseDTO> deleteReserve(@PathVariable long id){
         reserveService.deleteReserve(id);

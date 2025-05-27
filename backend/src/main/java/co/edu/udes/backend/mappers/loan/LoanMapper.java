@@ -14,5 +14,6 @@ public interface LoanMapper {
     @Mapping(target = "student.id", source = "studentId")
     Loan toEntity(LoanDTO loanDTO);
 
+
     LoanResponseDTO toResponseDTO(Loan loan);
 }

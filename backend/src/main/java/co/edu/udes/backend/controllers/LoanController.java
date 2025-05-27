@@ -1,6 +1,7 @@
 package co.edu.udes.backend.controllers;
 
 import co.edu.udes.backend.dto.loan.LoanDTO;
+import co.edu.udes.backend.dto.loan.LoanDateDTO;
 import co.edu.udes.backend.dto.loan.LoanResponseDTO;
 import co.edu.udes.backend.service.LoanService;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +35,8 @@ public class LoanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LoanResponseDTO> modifyLoan(@PathVariable long id, @RequestBody LoanDTO loanDTO){
-        return ResponseEntity.ok(loanService.modifyLoan(id,loanDTO));
+    public ResponseEntity<LoanResponseDTO> modifyLoan(@PathVariable long id, @RequestBody LoanDateDTO dto){
+        return ResponseEntity.ok(loanService.modifyLoan(id,dto));
     }
 
     @DeleteMapping("/{id}")

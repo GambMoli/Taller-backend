@@ -21,4 +21,6 @@ public interface ReserveRepository extends JpaRepository<Reserve,Long> {
     boolean existsByPlaceAndHourInitAndReserveDate(Place place, LocalTime hourInit, LocalDate reserveDate);
     List<Reserve> findByStudent(Student studentId);
     List<Reserve> findByTeacher(Teacher teacher);
+    boolean existsByPlaceAndHourInitAndReserveDateAndIdNot(Place place, LocalTime hourInit, LocalDate reserveDate, Long id);
+
 }
