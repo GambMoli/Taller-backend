@@ -82,6 +82,7 @@ public enum ErrorCode {
     INCOMPLETE_PERIODS_FOR_SUBJECT("Periodos incompletos."),
     SAME_LOAN_DATE("TIENEN LA MISMA FECHA DE PRESTAMO");
 
+
     private final String message;
 
     ErrorCode(String message) {
